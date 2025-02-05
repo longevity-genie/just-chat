@@ -255,6 +255,10 @@ docker compose up
    - To run in background mode, use:
      - `docker compose up -d`
    - This prevents port conflicts in future sessions
+ 
+ 6. for editing the model used in agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
+    It is the [just-agents library](https://github.com/longevity-genie/just-agents)
+
 
 ## Acknowledgments
 
