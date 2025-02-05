@@ -18,7 +18,8 @@ You can customize your setup by:
 2. Adding tools to `/tools` directory to empower your agent
 3. Modifying `docker-compose.yml` for advanced settings (optional)
 
-The only requirement is Docker! We provide detailed installation instructions for both Linux and Windows in the [Installation](#detailed-setting-up-instructions) section.
+The only requirement is Docker! We provide detailed installation instructions for both Linux and Windows in the [Installation](##_Installation) section.
+Also check the [notes](##_Some_notes) section for further information
 
 
 ## What can you do with Just-Chat?
@@ -143,7 +144,7 @@ Before installing Docker on Windows, ensure your system meets the following requ
 
 Windows 10 (Pro, Enterprise, Education) Version 1909 or later
 Windows 11 (any edition)
-WSL 2 (Windows Subsystem for Linux) enabled (recommended) link here [https://learn.microsoft.com/en-us/windows/wsl/install]
+WSL 2 (Windows Subsystem for Linux) enabled (recommended) link [here](https://learn.microsoft.com/en-us/windows/wsl/install)
 Hyper-V enabled (if using Windows 10 Pro/Enterprise)
 At least 4GB of RAM (recommended)
 
@@ -158,7 +159,7 @@ Limitations Without WSL:
 
 
 ### Install Docker Desktop
-1. Download Docker Desktop [https://docs.docker.com/desktop/setup/install/windows-install/]
+1. Download Docker Desktop [here](https://docs.docker.com/desktop/setup/install/windows-install/)
 
 2. Install Docker Desktop:
 -Locate the Docker Desktop Installer.exe file in your Downloads folder.
@@ -184,6 +185,7 @@ If you need standalone Docker Compose v1, install it manually:
 Download the latest Docker Compose binary:
 In powershell
 ```
+powershell
 curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-windows-x86_64.exe" -o "C:\Program Files\Docker\Docker\resources\bin\docker-compose.exe"
 ```
 
@@ -222,9 +224,12 @@ docker compose up
 
 
 ## Some notes
-1. After the application is started, you can access the chat interface at `0.0.0.0:3000`
+0. Be sure to use ```docker pull``` from time to time since the containers do not allways automatically update when image was called with `:latest`
+   It might even cause errors in running -so keep this in mind
+   
+2. After the application is started, you can access the chat interface at `0.0.0.0:3000`
 
-2. Key settings in `docker-compose.yml`:
+3. Key settings in `docker-compose.yml`:
    - UI Port: `0.0.0.0:3000` (under `huggingchat-ui` service)
    - Agent Port: `127.0.0.1:9090:8089` (under `just-web-agent` service)
    - MongoDB Port: `27017` (under `chat-mongo` service)
@@ -233,7 +238,7 @@ docker compose up
      - chat-ui: `ghcr.io/longevity-genie/chat-ui/chat-ui:sha-eeb856a`
      - mongo: `latest`
 
-3. Troubleshooting container conflicts:
+4. Troubleshooting container conflicts:
    - Check running containers: `docker ps`
    - Stop conflicting containers: 
      ```bash
@@ -243,7 +248,7 @@ docker compose up
    Note: Depending on your system and installation, you might need to use `docker-compose` (with dash) 
    instead of `docker compose` (without dash).
 
-4. Best practices for container management:
+5. Best practices for container management:
    - Always stop containers when done using either:
      - `docker compose down` (or `docker-compose down`)
      - `Ctrl+C` followed by `docker compose down`
