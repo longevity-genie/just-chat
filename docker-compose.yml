@@ -15,9 +15,9 @@ services:
       AGENT_REMOVE_SYSTEM_PROMPT: "false"
       AGENT_CONFIG: "/app/agent_profiles.yaml"
     ports:
-      - "127.0.0.1:9090:8089"
+      - "127.0.0.1:9090:8088"
     volumes:
-      - "./data:/data"
+      - "./data:/app/data"
       - "./env:/app/env"
       - "./models.d:/app/models.d"
       - "./tools:/app/tools"
