@@ -1,59 +1,52 @@
 services:
-  just-web-agent:
-    container_name: just-web-agent
-    image: ghcr.io/longevity-genie/just-agents:main
-    user: "${UID:-1000}:${GID:-1000}"
+  just-chat-ui-agents:
+    container_name: just-chat-ui-agents
+    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
     environment:
-      APP_PORT: "8088" #app port inside container
-      #APP_HOST: "0.0.0.0" #app host inside container, 0's to expose
-      AGENT_PORT: "8088" #agent port for chat to access
-      AGENT_HOST: "http://just-web-agent" #agent host for chat to access
+      APP_PORT: "8089" #app port inside container
+      APP_HOST: "0.0.0.0" #app host inside container, 0's to expose
+      AGENT_PORT: "8089" #agent port for chat to access
+      AGENT_HOST: "http://just-chat-ui-agents" #agent host for chat to access
       #AGENT_WORKERS: "4"
-      AGENT_TITLE: "Just Chat REST API node"
-      AGENT_PARENT_SECTION: ""
+      AGENT_TITLE: "Just Chat-UI REST API node"
+      AGENT_PARENT_SECTION: "agent_profiles"
       AGENT_DEBUG: "false"
       AGENT_REMOVE_SYSTEM_PROMPT: "false"
-      AGENT_CONFIG: "/app/agent_profiles.yaml"
+      AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
+      UID: ${USER_ID}
+      GID: ${GROUP_ID}
+      MODELS_DIR: "/app/models.d"
+      ENV_KEYS_PATH: "/app/env/.env.keys"
+      ENV_MODELS_PATH: "/app/env/.env.local"
+      AGENT_FAILFAST: "true"
+      #REMOVE_DD_CONFIGS: "true"
+      #TRAP_CHAT_NAMES: "true"
+      #JSON_FILE_PATTERN: "[0123456789][0123456789]_*.json"
+      #AGENT_SECTION: "" # for one agent
+      #PYTHONPATH: "/app"
     ports:
-      - "127.0.0.1:9090:8088"
+      - "127.0.0.1:8089:8089"
+    #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
+    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s 0.0.0.0:8089 | grep -q REST && test -f ./env/.env.local"]
+      interval: 15s
+      retries: 10
+      start_period: 12s
+      timeout: 1s
     volumes:
-      - "./data:/app/data"
+    #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
+      - "./scripts/init_env.py:/app/scripts/init.py"
+      - "./data:/data"
       - "./env:/app/env"
-      - "./models.d:/app/models.d"
-      - "./tools:/app/tools"
-      - "./agent_profiles.yaml:/app/agent_profiles.yaml"
-    restart: "always"
-    depends_on:
-      key-env-generator:
-        condition: service_completed_successfully
-
-  chat-env-generator:
-    image: python:3.10-slim
-    user: "${UID:-1000}:${GID:-1000}"
-    container_name: chat-env-generator
-    volumes:
-      - "./scripts:/scripts"
-      - "./models.d:/models.d"
-      - "./env:/env"
-    working_dir: /scripts
-    entrypoint: ["/bin/sh", "-c", "sleep 15 && python3 prepare_env_local.py"]
-    depends_on:
-      just-web-agent:
-        condition: service_started
-    restart: "no"
-
-  key-env-generator:
-    image: python:3.10-slim
-    user: "${UID:-1000}:${GID:-1000}"
-    container_name: key-env-generator
-    volumes:
-      - "./scripts:/scripts"
-      - "./env:/env"
-    working_dir: /scripts
-    entrypoint: [ "/bin/sh", "-c", "python3 prepare_keys.py" ]
+      - "./logs:/app/logs"
+      - "./scripts:/app/scripts"
+      - "./agent_tools:/app/agent_tools"
+      - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
+    restart: on-failure:3
 
   huggingchat-ui:
-    container_name: just-chat-ui
+    container_name: just-chat-ui-for-agents
     image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-325df57
     environment:
       ALLOW_INSECURE_COOKIES: "true"
@@ -63,14 +56,14 @@ services:
     ports:
       - "0.0.0.0:3000:3000"
     depends_on:
-      chat-env-generator:
-        condition: service_completed_successfully
+      just-chat-ui-agents:
+        condition: service_healthy
       chat-mongo:
         condition: service_started
-    restart: "no"
+    restart: unless-stopped
 
   chat-mongo:
-    container_name: just-chat-mongodb
+    container_name: just-chat-mongodb-for-agents
     image: mongo:latest
     restart: always
     env_file:
@@ -79,7 +72,10 @@ services:
       - "27017"
     volumes:
       - "./volumes/mongo/db:/data/db"
+    depends_on:
+      just-chat-ui-agents:
+        condition: service_healthy
 
 networks:
   default:
-    name: chat-server
+    name: chat-server-for-agents

@@ -9,13 +9,14 @@ Make your LLM agent and chat with it simple and fast!
 Just clone repository and run docker-compose!
 ```bash
 git clone https://github.com/winternewt/just-chat.git
-docker compose up
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
-And the chat with your agent is ready to go!
+And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
+Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file.
 
 You can customize your setup by:
-1. Editing `agent_profiles.yaml` to customize your agent
-2. Adding tools to `/tools` directory to empower your agent
+1. Editing `chat_agent_profiles.yaml` to customize your agent
+2. Adding tools to `/agent_tools` directory to empower your agent
 3. Modifying `docker-compose.yml` for advanced settings (optional)
 
 The only requirement is Docker! We provide detailed installation instructions for both Linux and Windows in the [Installation](##_Installation) section.
@@ -37,14 +38,16 @@ However, you might need to add your own keys to the environment variables. We pr
 ## Project Structure
 
 - [`agent_profiles.yaml`](agent_profiles.yaml) - Configure your agents, their personalities and capabilities, example agents provided.
-- [`docker-compose.yml`](docker-compose.yml) - Container orchestration and service configuration
-- [`/tools/`](tools/README.md) - Python tools to extend agent capabilities. Contains example tools and instructions for adding your own tools with custom dependencies
-- [`/models.d/`](models.d/README.md) - ChatUI models data directory (auto-populated at runtime)
-- [`/data/`](data/README.md) - Application data storage if you want to let your agent work with additional data
-- `/env/` - Environment configuration files and settings
-- `/scripts/` - Utility scripts including Docker installation helpers
-- `/volumes/` - Docker volume mounts for persistent storage
+- [`/agent_tools/`](agent_tools/README.md) - Python tools to extend agent capabilities. Contains example tools and instructions for adding your own tools with custom dependencies.
+- [`/data/`](data/README.md) - Application data storage if you want to let your agent work with additional data.
+- [`docker-compose.yml`](docker-compose.yml) - Container orchestration and service configuration.
+- [`/env/`](env/README.md) - Environment configuration files and settings.
+- [`images/`](images/README.md) - Images for the README.
+- [`/logs/`](logs/README.md) - Application logs.
+- [`/scripts/`](scripts/README.md) - Utility scripts including Docker installation helpers.
+- [`/volumes/`](volumes/README.md) - Docker volume mounts for persistent storage.
 
+Note: Each folder contains additional README file with more information about the folder contents!
 
 ## Installation
 
@@ -231,11 +234,11 @@ docker compose up
 
 3. Key settings in `docker-compose.yml`:
    - UI Port: `0.0.0.0:3000` (under `huggingchat-ui` service)
-   - Agent Port: `127.0.0.1:9090:8089` (under `just-web-agent` service)
+   - Agent Port: `127.0.0.1:8089:8089` (under `just-chat-ui-agents` service)
    - MongoDB Port: `27017` (under `chat-mongo` service)
    - Container image versions:
-     - just-web-agent: `ghcr.io/longevity-genie/just-agents:sha-923d91d`
-     - chat-ui: `ghcr.io/longevity-genie/chat-ui/chat-ui:sha-eeb856a`
+     - just-chat-ui-agents: `ghcr.io/longevity-genie/just-agents/chat-ui-agents:main`
+     - chat-ui: `ghcr.io/longevity-genie/chat-ui/chat-ui:sha-325df57`
      - mongo: `latest`
 
 4. Troubleshooting container conflicts:
@@ -259,6 +262,43 @@ docker compose up
  6. for editing the model used in agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
     It is the [just-agents library](https://github.com/longevity-genie/just-agents)
 
+
+
+## Environment Variables & API Keys Configuration
+
+The application uses environment variables to store API keys for various Language Model providers. A default configuration file is created under `env/.env.keys` during the initialization process. You can customize these keys to enable integrations with your preferred LLM providers.
+
+
+### Included and Supported Providers
+
+- **GROQ**: A default API key is provided on the first run if no keys are present.
+For additional LLM providers and their respective key configurations, please refer to the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers/).
+
+
+### Logging and Observability
+- By default, the application logs to the console and to timestamped files in the `/logs` directory.
+- In case you run the application in background mode, you can still access and review the console logs by running:
+`docker compose logs -f just-chat-ui-agents`.
+- **Langfuse**: Uncomment and fill in your credentials in `env/.env.keys` to enable additional observability for LLM calls.
+- Note: Langfuse is not enabled by default.
+- NB! `docker compose down` will flush the container logs, but application logs will still be available in the `/logs` directory unless you delete them manually.
+
+### How to Update the API Keys
+
+1. **Editing the API Keys File:**  
+   The API keys are stored in `/app/env/.env.keys`. You can update this file manually or run the initialization script located at `scripts/init_env.py` to automatically add commented hints for missing keys.
+
+2. **Using Environment Variables:**  
+   When running the application via Docker, these keys are automatically loaded into the container's environment. Feel free to use other means to populate the environment variables as long as the application can access them.
+
+3. **Restart the Application:**  
+   After updating the API keys, restart your Docker containers to apply the new settings, you may need to stop and start the containers to ensure the new keys are loaded:
+   ```bash
+   docker compose down
+   docker compose up
+   ```
+
+Happy chatting!
 
 ## Acknowledgments
 

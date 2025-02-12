@@ -1,6 +1,6 @@
 agent_profiles:
   sugar_genie: # Short agent identifier in snake_case format.
-    class_qualname: just_agents.web.web_agent.WebAgent # For web agents, always use this class name.
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent # For web agents, always use this class name.
     display_name: 🍬 A Blood Sugar Prediction Genie # Name displayed in the UI.
     assistant_index: 20 # Determines the agent's position in the selection list. The first agent is set as the default.
     llm_options: # Configuration options for the language model.
@@ -17,7 +17,7 @@ agent_profiles:
        You are a Glucose Level Prediction Advisor.
 
   web_agent_example:
-    class_qualname: just_agents.web.web_agent.WebAgent
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     assistant_index: 50 # Lower index numbers appear higher in the list.
     llm_options:
       api_base: https://api.groq.com/openai/v1
@@ -33,14 +33,14 @@ agent_profiles:
       You are a general productivity and non-medical health advisor.
 
   tools_agent:
-    class_qualname: just_agents.web.web_agent.WebAgent
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 🧰 Example Tools Agent # UI display name.
     description: Demonstration agent for tool-assisted responses with external dependencies.
     assistant_index: 70
     tools: # List of tools available to this agent. These will be automatically imported.
-      - package: "tools.toy_tools" # Corresponds to tools/toy_tools.py.
+      - package: "agent_tools.toy_tools" # Corresponds to tools/toy_tools.py.
         function: "generate_random_matrix" # Function available within the tool.
-      - package: "tools.toy_tools"
+      - package: "agent_tools.toy_tools"
         function: "summarize_dataframe"
     llm_options:
       api_base: https://api.groq.com/openai/v1
@@ -65,7 +65,7 @@ agent_profiles:
       2. A properly indented JSON representation of the data in Markdown. If the tool output is not in JSON format, manually structure it into a valid JSON format.
 
   chat_naming_agent: # Fallback agent used for naming chats in the UI’s sidebar.
-    class_qualname: just_agents.web.web_agent.WebAgent
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 📜 Chat Naming Agent # UI display name.
     description: Generates chat titles based on user queries.
     assistant_index: 99 # This agent is positioned last in the selection list.
