@@ -13,8 +13,8 @@ services:
       AGENT_DEBUG: "false"
       AGENT_REMOVE_SYSTEM_PROMPT: "false"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
-      UID: ${USER_ID}
-      GID: ${GROUP_ID}
+      USER_ID: ${USER_ID}
+      GROUP_ID: ${GROUP_ID}
       MODELS_DIR: "/app/models.d"
       ENV_KEYS_PATH: "/app/env/.env.keys"
       ENV_MODELS_PATH: "/app/env/.env.local"
@@ -32,7 +32,7 @@ services:
       test: ["CMD-SHELL", "curl -s 0.0.0.0:8089 | grep -q REST && test -f ./env/.env.local"]
       interval: 15s
       retries: 10
-      start_period: 12s
+      start_period: 15s
       timeout: 1s
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
