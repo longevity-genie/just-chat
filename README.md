@@ -14,13 +14,21 @@ USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
 Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file.
 
+If you prefer Podman, you can use alternative Podman installation:
+```bash
+git clone https://github.com/winternewt/just-chat.git
+podman-compose up -f podman-compose.yml
+```
+Unlike Docker, Podman just uses current user previlages and not additional setup of user and group id is needed. However, it is important to explicetly provide podman-compose.yml file as it is slightly different from docker-compose.yml.
+
+
 You can customize your setup by:
 1. Editing `chat_agent_profiles.yaml` to customize your agent
 2. Adding tools to `/agent_tools` directory to empower your agent
 3. Modifying `docker-compose.yml` for advanced settings (optional)
 
-The only requirement is Docker! We provide detailed installation instructions for both Linux and Windows in the [Installation](##_Installation) section.
-Also check the [notes](##_Some_notes) section for further information
+The only requirement is Docker (or Podman, both are supported)! We provide detailed installation instructions for both Linux and Windows in the [Installation](#installation) section.
+Also check the [notes](#some-notes) section for further information.
 
 
 ## What can you do with Just-Chat?
@@ -37,7 +45,7 @@ However, you might need to add your own keys to the environment variables. We pr
 
 ## Project Structure
 
-- [`agent_profiles.yaml`](agent_profiles.yaml) - Configure your agents, their personalities and capabilities, example agents provided.
+- [`chat_agent_profiles.yaml`](chat_agent_profiles.yaml) - Configure your agents, their personalities and capabilities, example agents provided.
 - [`/agent_tools/`](agent_tools/README.md) - Python tools to extend agent capabilities. Contains example tools and instructions for adding your own tools with custom dependencies.
 - [`/data/`](data/README.md) - Application data storage if you want to let your agent work with additional data.
 - [`docker-compose.yml`](docker-compose.yml) - Container orchestration and service configuration.
@@ -46,174 +54,124 @@ However, you might need to add your own keys to the environment variables. We pr
 - [`/logs/`](logs/README.md) - Application logs.
 - [`/scripts/`](scripts/README.md) - Utility scripts including Docker installation helpers.
 - [`/volumes/`](volumes/README.md) - Docker volume mounts for persistent storage.
+- `/logs/` - Application logs. We use eliot library for logging
 
 Note: Each folder contains additional README file with more information about the folder contents!
 
 ## Installation
 
-Detailed installation instructions. If you already have Docker and Docker Compose installed, you can probably skip this section.
+Just-Chat is a containerized application. To run it you can use either Docker or Podman.
+You can skip this section if you already have any of them installed. If you do not have a preference we recommend Podman as more modern and secure container engine.
 
-### Install Docker and Docker Compose
-If you never installed Docker and Docker Compose, you can use the following instructions to install them. Otherwise you can skip this step.
-To check if you have Docker and Docker Compose installed, you can use the following commands:
+Detailed docker instructions:
+<details>
+<summary>Docker Installation on Linux</summary>
 
-```bash
-docker --version
-docker-compose --version
-```
-The commands apply to both Linux (bash) and Windows (PowerShell). After this point instaltion split into Linux and Windows.
-
-Note: in some cases `docker-compose` is called `docker compose` (without `-`). It depends on the version of docker compose you have installed.
-
-
-### On Linux
-#### Install Docker and Docker-compose Standalone
+### Install Docker and Docker-compose Standalone
 
 Refer to the official guides: 
  - [Docker Installation Guide](https://docs.docker.com/engine/install/ubuntu/).
  - [Docker-compose Standalone Installation Guide](https://docs.docker.com/compose/install/standalone/).
  
- For Ubuntu users, you can review and use the provided convenience.sh script, executing the code below. Running the script will install Docker and Docker Compose.Otherwise you can follow the steps presented after this command.
+For Ubuntu users, you can review and use the provided convenience.sh script:
+```bash
+./scripts/install_docker_ubuntu.sh
+```
 
-  ```bash
-  ./scripts/install_docker_ubuntu.sh
-  ```
-
+Or follow these manual steps:
 
 #### Setup Docker's apt repository
-
 ```bash
 # Add Docker's official GPG key:
 sudo apt-get update
 sudo apt-get install ca-certificates curl
-#Updates the package lists (apt-get update).
-#Installs required packages (ca-certificates and curl) for handling HTTPS-based repositories.
-
 sudo install -m 0755 -d /etc/apt/keyrings
-#Creates the /etc/apt/keyrings directory with 0755 permissions (readable and executable by everyone, writable only by the owner).
-#This directory is used to store GPG keys securely.
-
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
-#Downloads Docker's official GPG key (used to verify package authenticity) and saves it to /etc/apt/keyrings/docker.asc.
-#Changes file permissions so that all users can read it (a+r).
-
 
 # Add the repository to Apt sources:
-#Adds Docker's official repository to the system's package sources.
-#dpkg --print-architecture ensures the right package architecture (amd64, arm64, etc.).
-#. /etc/os-release && echo "VERSION_CODENAME" dynamically fetches your Ubuntu version codename (e.g., jammy for Ubuntu 22.04).
-#Writes the repository URL into /etc/apt/sources.list.d/docker.list.
-#> /dev/null discards unnecessary output.
-
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt-get update
-
 ```
 
-
-### Install latest Docker and docker-compose standalone packages
-
+#### Install latest Docker packages
 ```bash
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-#Installs:
-#docker-ce (Docker Community Edition engine)
-#docker-ce-cli (Docker CLI tools)
-#containerd.io (Container runtime for managing containers)
-#docker-buildx-plugin (Next-gen build system for Docker)
-#docker-compose-plugin (Plugin for Docker Compose v2)
-
 curl -SL https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-$(uname -m) -o /usr/local/bin/docker-compose
-#Downloads the latest Docker Compose binary (v2.32.4) from GitHub.
-#$(uname -m) ensures that the correct architecture (e.g., x86_64, aarch64) is downloaded.
-#Saves it to /usr/local/bin/docker-compose.
-
 chmod +x /usr/local/bin/docker-compose
-#Changes file permissions to make it executable.
-
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-#Creates a symbolic link from /usr/local/bin/docker-compose to /usr/bin/docker-compose.
-#This allows you to run Docker Compose commands without specifying the full path.
 ```
+</details>
 
-
-## On Windows
+<details>
+<summary>Docker Installation on Windows</summary>
 
 ### Prerequisites
-Before installing Docker on Windows, ensure your system meets the following requirements:
+- Windows 10 (Pro, Enterprise, Education) Version 1909 or later
+- Windows 11 (any edition)
+- WSL 2 (Windows Subsystem for Linux) enabled (recommended) - [WSL Installation Guide](https://learn.microsoft.com/en-us/windows/wsl/install)
+- Hyper-V enabled (if using Windows 10 Pro/Enterprise)
+- At least 4GB of RAM (recommended)
 
-Windows 10 (Pro, Enterprise, Education) Version 1909 or later
-Windows 11 (any edition)
-WSL 2 (Windows Subsystem for Linux) enabled (recommended) link [here](https://learn.microsoft.com/en-us/windows/wsl/install)
-Hyper-V enabled (if using Windows 10 Pro/Enterprise)
-At least 4GB of RAM (recommended)
+### Installation Steps
+1. Download [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/)
+2. Run the installer and follow the prompts
+3. Restart your PC
+4. Launch Docker Desktop
+5. Docker Compose is included with Docker Desktop
 
-Though WSL is not strictly required for installation, it is highly recommended for running Linux-based containers efficiently.
-If you don't want to use WSL during Docker Desktop installation, uncheck the option "Use WSL 2 instead of Hyper-V".
-Docker will automatically switch to Windows Containers instead of Linux Containers.
+For detailed instructions and troubleshooting, see the [official Windows installation guide](https://docs.docker.com/desktop/install/windows-install/).
+</details>
 
-Limitations Without WSL:
--You cannot run Linux-based containers (unless using a full virtual machine).
--Performance is slower because it uses Hyper-V (Windows 10 Pro/Enterprise) or Windows-native virtualization.
--Some Docker features (e.g., Kubernetes support) won't work.
+<details>
 
+If you prefer Podman, you can use the following instructions:
 
-### Install Docker Desktop
-1. Download Docker Desktop [here](https://docs.docker.com/desktop/setup/install/windows-install/)
+<summary>Podman Installation on Linux</summary>
 
-2. Install Docker Desktop:
--Locate the Docker Desktop Installer.exe file in your Downloads folder.
--Double-click to start the installation.
--Check the required options:
---Enable WSL 2 (recommended)
---Enable Windows Containers (optional, needed for Windows-based containers).
--Click Install and wait for it to complete.
-
-3. Restart Your PC
-After installation, restart your computer to apply the changes.
-
-4. Run Docker Desktop
-Open Start Menu and search for Docker Desktop.
-Click to launch Docker.
-Wait for it to start (it may take a few seconds).
-You should see the Docker whale 🐳 icon in the taskbar.
-
-5. Install Docker Compose on Windows
-Docker Compose v2 is already built into Docker Desktop. 
-If you need standalone Docker Compose v1, install it manually:
-
-Download the latest Docker Compose binary:
-In powershell
-```
-powershell
-curl -SL "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-windows-x86_64.exe" -o "C:\Program Files\Docker\Docker\resources\bin\docker-compose.exe"
-```
-
-Add Docker Compose to System Path (if not already).
-Restart your system.
-
-Docker works best with Windows Subsystem for Linux (WSL 2). 
-Open Docker Desktop, go to Settings → General, and check:
-Use WSL 2 for Linux containers.
-
-6. Ensure Docker Starts on Boot (Optional)
-To make Docker automatically start:
-Open Docker Desktop.
-Go to Settings → General.
-Enable "Start Docker Desktop when you log in".
-
-
-## For both operating systems
-
-### Verify installation
-
+For Ubuntu users (especially Ubuntu 24.04+):
 ```bash
-sudo docker run hello-world
-docker-compose --version
+# Install Podman
+sudo apt-get update
+sudo apt-get install -y podman
+
+# Install Python3 and pip if not already installed
+sudo apt-get install -y python3 python3-pip
+
+# Install Podman Compose
+pip3 install podman-compose
 ```
+
+For other Linux distributions, refer to:
+- [Podman Installation Guide](https://podman.io/docs/installation)
+- [Podman Compose Installation Guide](https://github.com/containers/podman-compose)
+</details>
+
+<details>
+<summary>Podman Installation on Windows</summary>
+
+### Prerequisites
+- Windows 10/11
+- WSL 2 enabled
+- 4GB RAM (recommended)
+
+### Installation Steps
+1. Download and install [Podman Desktop](https://podman-desktop.io/downloads)
+2. Initialize Podman:
+```powershell
+podman machine init
+podman machine start
+```
+3. Install Podman Compose:
+```powershell
+pip3 install podman-compose
+```
+
+For detailed instructions, see the [official Podman documentation](https://podman.io/docs/installation#windows).
+</details>
 
 ## Clone Just-Chat repository
 ```bash
@@ -227,12 +185,12 @@ docker compose up
 
 
 ## Some notes
-0. Be sure to use ```docker pull``` from time to time since the containers do not allways automatically update when image was called with `:latest`
-   It might even cause errors in running -so keep this in mind
+0. Be sure to use ```docker pull``` (or podman pull if you use Podman) from time to time since the containers do not always automatically update when image was called with `:latest`
+   It might even cause errors in running - so keep this in mind.
    
 2. After the application is started, you can access the chat interface at `0.0.0.0:3000`
 
-3. Key settings in `docker-compose.yml`:
+3. Key settings in `docker-compose.yml` (or podman-compose.yml if you use Podman):
    - UI Port: `0.0.0.0:3000` (under `huggingchat-ui` service)
    - Agent Port: `127.0.0.1:8089:8089` (under `just-chat-ui-agents` service)
    - MongoDB Port: `27017` (under `chat-mongo` service)
@@ -242,7 +200,7 @@ docker compose up
      - mongo: `latest`
 
 4. Troubleshooting container conflicts:
-   - Check running containers: `docker ps`
+   - Check running containers: `docker ps` (or podman ps if you use Podman)
    - Stop conflicting containers: 
      ```bash
      cd /path/to/container/directory
@@ -259,9 +217,8 @@ docker compose up
      - `docker compose up -d`
    - This prevents port conflicts in future sessions
  
- 6. for editing the model used in agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
+ 6. for editing the model used in chat_agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
     It is the [just-agents library](https://github.com/longevity-genie/just-agents)
-
 
 
 ## Environment Variables & API Keys Configuration
@@ -271,7 +228,7 @@ The application uses environment variables to store API keys for various Languag
 
 ### Included and Supported Providers
 
-- **GROQ**: A default API key is provided on the first run if no keys are present.
+- **GROQ**: A default API key is provided on the first run if no keys are present. However, this key is shared with other users and is rate-limited (you can get rate limit errors from time to time). We recommend getting your own key from [Groq](https://console.groq.com/playground).
 For additional LLM providers and their respective key configurations, please refer to the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers/).
 
 
