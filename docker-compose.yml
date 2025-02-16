@@ -64,7 +64,7 @@ services:
 
   chat-mongo:
     container_name: just-chat-mongodb-for-agents
-    image: mongo:latest
+    image: docker.io/library/mongo:latest
     restart: always
     env_file:
       - ./env/.env.mongo

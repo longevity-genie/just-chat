@@ -17,7 +17,7 @@ Note: container will be started with the user and group of the host machine to a
 If you prefer Podman, you can use alternative Podman installation:
 ```bash
 git clone https://github.com/winternewt/just-chat.git
-podman-compose up -f podman-compose.yml
+podman-compose up 
 ```
 Unlike Docker, Podman just uses current user previlages and not additional setup of user and group id is needed. However, it is important to explicetly provide podman-compose.yml file as it is slightly different from docker-compose.yml.
 

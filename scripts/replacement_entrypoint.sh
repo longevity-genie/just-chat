@@ -77,7 +77,7 @@ if [ -f "$REQUIREMENTS_FILE" ]; then
         echo "Executing command: poetry add $REQS"
 
         # Run poetry add with the filtered dependencies
-        if poetry add $REQS; then
+        if poetry add "$REQS"; then
             # On successful installation, update (or create) the flag file with the current hash
             echo "$CURRENT_HASH" > "$INSTALL_FLAG"
             echo "Dependencies installation completed successfully"
