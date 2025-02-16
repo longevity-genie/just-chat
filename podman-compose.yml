@@ -69,7 +69,8 @@ services: #podman compose specific configuration, run with explicit file name: p
     ports:
       - "27017"
     volumes:
-      - "mongo-data:/data/db" 
+      - "mongo-data:/data/db"
+   #  - "./volumes/mongo/db:/data/db"
     depends_on:
       just-chat-ui-agents:
         condition: service_started
