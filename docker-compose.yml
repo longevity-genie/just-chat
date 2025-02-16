@@ -13,8 +13,8 @@ services:
       AGENT_DEBUG: "false"
       AGENT_REMOVE_SYSTEM_PROMPT: "false"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
-      USER_ID: ${USER_ID}
-      GROUP_ID: ${GROUP_ID}
+      USER_ID: ${USER_ID:-${UID}}
+      GROUP_ID: ${GROUP_ID:-${GID}}
       MODELS_DIR: "/app/models.d"
       ENV_KEYS_PATH: "/app/env/.env.keys"
       ENV_MODELS_PATH: "/app/env/.env.local"
@@ -36,7 +36,7 @@ services:
       timeout: 1s
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
-      - "./scripts/init_env.py:/app/scripts/init.py"
+      - "./scripts/init_env.py:/app/init.py"
       - "./data:/data"
       - "./env:/app/env"
       - "./logs:/app/logs"

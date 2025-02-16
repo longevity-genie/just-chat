@@ -113,9 +113,10 @@ def main() -> None:
     
     # Append a general hint for additional LLM providers and API keys.
     additional_hint: str = "https://docs.litellm.ai/docs/providers/"
-    key_lines.append("\n")
-    key_lines.append(f"# For additional LLM providers and their respective keys, see {additional_hint}\n")
-    print("Added hint for additional providers to .env.keys.")
+    if not any(additional_hint in line for line in key_lines):
+        key_lines.append("\n")
+        key_lines.append(f"# For additional LLM providers and their respective keys, see {additional_hint}\n")
+        print("Added hint for additional providers to .env.keys.")
     
     # Write the updated lines back into the environment keys file
     write_env_file(env_keys_path, key_lines)
