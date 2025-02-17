@@ -14,13 +14,13 @@ USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
 Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file.
 
-If you prefer Podman, you can use alternative Podman installation:
+If you prefer Podman or use RPM-based distro where it is the default option, you can use alternative Podman installation:
 ```bash
 git clone https://github.com/winternewt/just-chat.git
 podman-compose up 
 ```
-Unlike Docker, Podman just uses current user previlages and not additional setup of user and group id is needed. However, it is important to explicetly provide podman-compose.yml file as it is slightly different from docker-compose.yml.
-
+Unlike Docker, Podman is rootless-by-design maps user and group id automatically. 
+NB! Ubuntu 22 contains podman v.3 which is not fully compatible with this setup, assume podman v4.9.3 or higher is required.
 
 You can customize your setup by:
 1. Editing `chat_agent_profiles.yaml` to customize your agent
@@ -143,6 +143,27 @@ sudo apt-get install -y python3 python3-pip
 
 # Install Podman Compose
 pip3 install podman-compose
+```
+
+For legacy Ubuntu users (22.04 LTS):
+You will have, sadly, to build podman from source. Due to outdated go-lang version in Ubuntu 22.04 LTS, you will have to add ppa repository and install a newer version of go-lang as a prerequisite and a bunch of libraries:
+
+```bash
+sudo add-apt-repository ppa:longsleep/golang-backports
+sudo apt update
+sudo sysctl kernel.unprivileged_userns_clone=1
+sudo apt install git build-essential btrfs-progs gcc git golang-go go-md2man iptables libassuan-dev libbtrfs-dev libc6-dev libdevmapper-dev libglib2.0-dev libgpgme-dev libgpg-error-dev libprotobuf-dev libprotobuf-c-dev libseccomp-dev libselinux1-dev libsystemd-dev make containernetworking-plugins pkg-config uidmap
+sudo apt install runc # only if you don't have docker installed
+```
+
+Clone the podman repository and checkout the latest stable version from 24 LTS:
+```bash
+git clone https://github.com/containers/podman.git
+cd podman/
+git checkout v4.9.3
+make
+sudo make install
+podman --version
 ```
 
 For other Linux distributions, refer to:
