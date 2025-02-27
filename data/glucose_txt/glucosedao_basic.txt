@@ -1,0 +1,20 @@
+GlucoseDAO is an innovative decentralized science project focused on glucose prediction and health optimization,
+combining technology with community-driven healthcare solutions.
+
+Project Overview
+Core Mission
+The project aims to develop an open-source glucose prediction system while building a collaborative community
+focused on health and longevity. The initiative addresses a significant market, with 6.7% of the global population 
+being diabetic and approximately one-third interested in health awareness and lifestyle improvement.
+
+Technical Development
+-Created an open-source glucose prediction repository using an open-source transformer model
+-Launched a microstudy collecting CGM and movement data(still in progress)
+-Developing a human prediction benchmark game (since there is no golden standard for glucose prediction)
+-Maintaining public Huggingface models and datasets
+
+Achievements and Recognition
+-Secured aprox $2,000 funding from DesciFunding GG21
+-Presented research at ARDD 2024 as a figure in a poster
+-Conducted presentations at Zelar and HEALES longevity meetings
+

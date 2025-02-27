@@ -1,0 +1,13 @@
+Market Analysis
+Current Market Status
+-Proprietary CGM apps average 2.5-star ratings
+-Third-party apps with better user data access achieve 4.5-star ratings
+-Existing solutions primarily focus on direct value readings without predictive capabilities
+-Methods of glucose prediction are not accurate and accessible
+
+Market Opportunities:
+-number of users of CGM apps is growing
+-number of health-conscious people is growing and also the number of people with diabetes
+-studies are showing that glucose prediction can improve health outcomes
+
+still there are no glucose prediction apps that are accurate and accessible
