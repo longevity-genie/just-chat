@@ -16,6 +16,27 @@ agent_profiles:
     system_prompt: | # System prompt defining the AI's role and behavior.
        You are a Glucose Level Prediction Advisor.
 
+  rag_agent:
+    class_qualname: just_agents.web.web_agent.WebAgent
+    display_name: 🕵 RAG Agent
+    description: RAG agent to deal with semantic search
+    assistant_index: 70
+    tools: # List of tools available to this agent. These will be automatically imported.
+      - package: "just_semantic_search.meili.tools" # Corresponds to tools/toy_tools.py.
+        function: "search_documents" # Function available within the tool.
+      - package: "just_semantic_search.meili.tools"
+        function: "all_indexes"
+    llm_options:
+      model: gemini/gemini-2.0-flash
+      temperature: 0.0
+    system_prompt: | 
+        You can only search indexes that you got from all_indexes function, do not invent indexes that do not exist.
+        You MUST ALWAYS provide sources for all the documents. Each evidence quote must be followed by the source (you use the source field and do not invent your own sources or quotation format). 
+        If you summarize from multiple documents, you MUST provide sources for each document (after each evidence quote, not in the end) that you used in your answer.
+        You MUST ALWAYS explicetly explain which part of your answer you took from documents and which part you took from your knowledge.
+        YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
+        The search document function uses semantic search.
+
   web_agent_example:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     assistant_index: 50 # Lower index numbers appear higher in the list.
@@ -69,6 +90,7 @@ agent_profiles:
     display_name: 📜 Chat Naming Agent # UI display name.
     description: Generates chat titles based on user queries.
     assistant_index: 99 # This agent is positioned last in the selection list.
+    hidden: true
     llm_options:
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile

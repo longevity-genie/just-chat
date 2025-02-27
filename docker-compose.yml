@@ -2,7 +2,9 @@ services:
   just-chat-ui-agents:
     container_name: just-chat-ui-agents
     image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
+    #image: ghcr.io/longevity-genie/just-semantic-search/rag-server:latest
     environment:
+      APP_DIR: "/app"
       APP_PORT: "8089" #app port inside container
       APP_HOST: "0.0.0.0" #app host inside container, 0's to expose
       AGENT_PORT: "8089" #agent port for chat to access
@@ -18,7 +20,11 @@ services:
       MODELS_DIR: "/app/models.d"
       ENV_KEYS_PATH: "/app/env/.env.keys"
       ENV_MODELS_PATH: "/app/env/.env.local"
-      AGENT_FAILFAST: "true"
+      AGENT_FAILFAST: "false"
+      EMBEDDING_MODEL: "jinaai/jina-embeddings-v3"
+      MEILI_MASTER_KEY: "fancy_master_key"
+      MEILISEARCH_HOST: "meilisearch"
+      MEILISEARCH_PORT: "7700"
       #REMOVE_DD_CONFIGS: "true"
       #TRAP_CHAT_NAMES: "true"
       #JSON_FILE_PATTERN: "[0123456789][0123456789]_*.json"
@@ -34,10 +40,15 @@ services:
       retries: 10
       start_period: 15s
       timeout: 1s
+    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+    #  - DAC_OVERRIDE
+    depends_on:
+      meilisearch:
+        condition: service_started
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
       - "./scripts/init_env.py:/app/init.py"
-      - "./data:/data"
+      - "./data:/app/data"
       - "./env:/app/env"
       - "./logs:/app/logs"
       - "./scripts:/app/scripts"
@@ -47,7 +58,7 @@ services:
 
   huggingchat-ui:
     container_name: just-chat-ui-for-agents
-    image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-325df57
+    image: ghcr.io/longevity-genie/chat-ui/chat-ui:latest
     environment:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
@@ -55,6 +66,8 @@ services:
       - "./env/.env.local:/app/.env.local"
     ports:
       - "0.0.0.0:3000:3000"
+    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+    #  - DAC_OVERRIDE
     depends_on:
       just-chat-ui-agents:
         condition: service_healthy
@@ -64,12 +77,14 @@ services:
 
   chat-mongo:
     container_name: just-chat-mongodb-for-agents
-    image: docker.io/library/mongo:latest
+    image: docker.io/library/mongo:latest #set this to 4.4.18 if you see errors related to AVX instructions
     restart: always
     env_file:
       - ./env/.env.mongo
     ports:
       - "27017"
+    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+    #  - DAC_OVERRIDE
     volumes:
       - "mongo-data:/data/db"
     #  - "./volumes/mongo/db:/data/db"
@@ -77,8 +92,29 @@ services:
       just-chat-ui-agents:
         condition: service_healthy
 
+  meilisearch:
+    image: docker.io/getmeili/meilisearch:v1.13.0 # we have to use it because migration got easier
+    environment:
+      - http_proxy
+      - https_proxy
+      - MEILI_MASTER_KEY=fancy_master_key
+      - MEILI_NO_ANALYTICS=true
+      - MEILI_ENV=development
+      - MEILI_LOG_LEVEL=debug
+      - MEILI_DB_PATH=/data.ms
+      - MEILI_EXPERIMENTAL_ENABLE_METRICS=true
+      - MEILI_EXPERIMENTAL_ENABLE_VECTORS=true
+    ports:
+      - 7700:7700
+    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+    #  - DAC_OVERRIDE
+    volumes:
+      - meili-data:/data.ms
+    restart: unless-stopped
+
 volumes:
   mongo-data:
+  meili-data:
 
 networks:
   default:
