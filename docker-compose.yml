@@ -33,7 +33,7 @@ services:
       - "127.0.0.1:8091:8091"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
     #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
-    command: ["python", "-m", "just_semantic_search.server.rag_server"]
+    command: "python -m just_semantic_search.server.rag_server --agent-profiles /app/chat_agent_profiles.yaml"
     healthcheck:
       test: ["CMD-SHELL", "curl -s 0.0.0.0:8091 | grep -q REST && test -f ./env/.env.local"]
       interval: 15s

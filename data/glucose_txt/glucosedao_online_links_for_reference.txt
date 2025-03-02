@@ -1,0 +1,49 @@
+1.Links to papers from the Zelar talk presentation
+
+1.1.
+Effects of Variability in Glycemic Indices on Longevity in Chinese Centenarians
+    https://doi.org/10.3389/fnut.2022.955101
+
+1.2.
+Continuous Glucose Monitoring in Healthy Adults—Possible Applications in Health Care, Wellness, and Sports
+     https://doi.org/10.3390/s22052030
+
+1.3.
+Glycaemic variability, assessed with continuous glucose monitors, is associated with diet, lifestyle and health in people without diabetes (Preprint)
+    https://www.researchsquare.com/article/rs-3469475/v1
+
+1.4.
+Continuous glucose monitoring in a healthy population: understanding the post-prandial glycemic response in individuals without diabetes mellitus
+     https://doi.org/10.1016/j.metabol.2023.155640
+
+1.5.
+Assessing the Shape of the Glucose Curve During an Oral Glucose Tolerance Test
+    https://doi.org/10.2337/diacare.26.4.1026
+
+1.6.
+GlucoBench: Curated List of Continuous Glucose Monitoring Datasets with Prediction Benchmarks
+    https://github.com/IrinaStatsLab/GlucoBench
+
+1.7.
+This is a collection of links to publicly available continuous glucose monitoring (CGM) data.
+    https://github.com/IrinaStatsLab/Awesome-CGM
+
+1.8.
+From Glucose Patterns to Health Outcomes: A Generalizable Foundation Model for Continuous Glucose Monitor Data Analysis
+    https://arxiv.org/abs/2408.11876
+
+
+
+2. Links to other papers later found which might be of interest
+
+2.1.
+Improving Glucose Prediction Accuracy in Physically Active Adolescents With Type 1 Diabetes
+    https://pmc.ncbi.nlm.nih.gov/articles/PMC6610614/
+
+2.2.
+Machine learning-based glucose prediction with use of continuous glucose and physical activity monitoring data: The Maastricht Study
+    https://pmc.ncbi.nlm.nih.gov/articles/PMC8224858/
+
+2.3.
+Enhanced blood glucose levels prediction with a smartwatch
+    https://pmc.ncbi.nlm.nih.gov/articles/PMC11257318/

@@ -1,0 +1,44 @@
+How does GlucoseDao plan to improve glucose prediction accuracy?
+GlucoseDAO's approach to improving glucose prediction accuracy involves a combination of 
+data collection and benchmarking strategies:
+
+Data Collection Approach (resulting in a larger and more diverse dataset)
+-microstudy that combines Continuous Glucose Monitoring (CGM) data with movement data to build comprehensive prediction models.
+-users can contribute their data to the dataset
+-researchers can use the dataset to train their models or to test new models/theories
+
+Benchmarking Strategy
+-The project is developing a unique benchmarking method through a game where users predict glucose value changes 
+-for the next hour. This human prediction rate will serve as a baseline to validate their model's effectiveness.
+
+Technical Implementation
+-Created an open-source project available on GitHub
+-Focuses on data integration capabilities for users
+-Maintains open datasets for collaborative improvement
+
+This approach is scientifically sound, as research has shown that for 30-minute prediction horizons, well-designed models 
+can achieve 95.8-99.7% clinically acceptable predictions1. The inclusion of additional physiological data, particularly 
+during physical activity, has been proven to significantly improve prediction accuracy. (see 2.1 from glucosedao_online_links_for_reference.txt)
+
+What specific technologies will GlucoseDao use to enhance glucose prediction accuracy?
+-Multi-Source Data Integration
+-Continuous Glucose Monitoring (CGM) as the primary data source
+-Smartwatch sensor data including heart rate and step detection1
+-Accelerometry data for physical activity tracking
+-Machine Learning Architecture
+
+Performance Metrics
+This technical approach could achieve:
+-15-minute predictions with RMSE of 0.19mmol/L and 99% clinical safety
+-60-minute predictions with RMSE of 0.59mmol/L and 98% clinical safety
+(see 2.2 from glucosedao_online_links_for_reference.txt)
+
+-Improved accuracy by removing reliance on manual activity logging
+(see 2.3 from glucosedao_online_links_for_reference.txt)
+
+Real-time Processing
+The system would implement:
+-Edge computing for real-time model inference
+-Continuous data collection and processing from wearable devices
+-Automated activity monitoring to replace manual documentation
+
