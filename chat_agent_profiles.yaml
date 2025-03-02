@@ -6,10 +6,16 @@ agent_profiles:
     display_name: 🍬 A Blood Sugar Prediction Genie # Name displayed in the UI.
     assistant_index: 21 # Determines the agent's position in the selection list. The first agent is set as the default.
     tools: # List of tools available to this agent. These will be automatically imported.
-      - package: "agent_tools.document_reader" # Corresponds to tools/toy_tools.py.
-        function: "read_file" # Function available within the tool.
+      - package: "agent_tools.document_reader" # Corresponds to tools/document_reader.py.
+        function: "read_file" # Function to read a file
       - package: "agent_tools.document_reader" # Corresponds to tools/toy_tools.py.
         function: "list_files" # Function available within the tool.
+      - package: "agent_tools.document_reader" # Corresponds to tools/document_reader.py.
+        function: "list_files" # Function available within the tool.
+      - package: "agent_tools.document_reader" # Meilisearch semantic search tool
+        function: "semantic_search" # Function available within the tool.
+      - package: "just_agents.tools.semantic_search" # Meilisearch semantic search tool
+        function: "list_search_indexes" # Function available within the tool.
     llm_options:
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
@@ -38,7 +44,9 @@ agent_profiles:
       You MUST ALWAYS provide sources for all the documents. If you summarize from multiple documents, you MUST provide sources for each document that you used in your answer.
       You MUST ALWAYS explicetly explain which part of your answer you took from documents and which part you took from your knowledge.
       YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
-      The search document function uses semantic search.
+      You can use the list_search_indexes tool to get the list of search indexes.
+      You can use the semantic_search tool to search for relevant documents, you MUST always use glucosedao as search index.
+      You can use the agentic_semantic_search tool to search for relevant documents, you MUST always use glucosedao as search index.
 
   web_agent_example:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
