@@ -213,7 +213,7 @@ docker compose up
 
 3. Key settings in `docker-compose.yml` (or podman-compose.yml if you use Podman):
    - UI Port: `0.0.0.0:3000` (under `huggingchat-ui` service)
-   - Agent Port: `127.0.0.1:8089:8089` (under `just-chat-ui-agents` service)
+   - Agent Port: `127.0.0.1:8091:8091` (under `just-chat-ui-agents` service)
    - MongoDB Port: `27017` (under `chat-mongo` service)
    - Container image versions:
      - just-chat-ui-agents: `ghcr.io/longevity-genie/just-agents/chat-ui-agents:main`

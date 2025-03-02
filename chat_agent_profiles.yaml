@@ -103,3 +103,50 @@ agent_profiles:
 
       Do not attempt to answer the question—only summarize it concisely. 
       Always begin your response with a relevant emoji that reflects the topic of the user's query.
+
+  rag_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 🕵 RAG Agent
+    description: RAG agent to deal with semantic search
+    hidden: true
+    assistant_index: 70
+    tools: # List of tools available to this agent. These will be automatically imported.
+      - package: "just_semantic_search.meili.tools" # Corresponds to tools/toy_tools.py.
+        function: "search_documents" # Function available within the tool.
+      - package: "just_semantic_search.meili.tools"
+        function: "all_indexes"
+    llm_options:
+      model: gemini/gemini-2.0-flash
+      temperature: 0.0
+    system_prompt: | 
+        You can only search indexes that you got from all_indexes function, do not invent indexes that do not exist.
+        You MUST ALWAYS provide sources for all the documents. Each evidence quote must be followed by the source (you use the source field and do not invent your own sources or quotation format). 
+        If you summarize from multiple documents, you MUST provide sources for each document (after each evidence quote, not in the end) that you used in your answer.
+        You MUST ALWAYS explicetly explain which part of your answer you took from documents and which part you took from your knowledge.
+        YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
+        The search document function uses semantic search.
+  
+  annotation_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 📝 Annotation Agent
+    description: Annotation agent to deal with annotation
+    hidden: true
+    assistant_index: 71
+    llm_options:
+      model: gemini/gemini-2.0-flash
+      temperature: 0.0
+    system_prompt: |
+        You are a paper annotator. You extract the abstract, authors and titles of the papers.
+                Abstract and authors must be exactly he way they are in the paper, do not edit them.
+                You provide your output as json object of the following JSON format:
+                {
+                    "abstract": "...",
+                    "authors": ["...", "..."],
+                    "title": "...",
+                    "source": "...",
+                }
+                Make sure to provide the output in the correct format, do not add any other text or comments, do not add ```json or other surrounding.
+                For string either use one line or use proper escape characters (\n) for line breaks
+                Make sure to provide the output in the correct format, do not add any other text or comments.
+                For source you either give DOI, pubmed or filename (if doi or pubmed is not available).
+                File filename you give a filename of the file in the folder together with the extension.

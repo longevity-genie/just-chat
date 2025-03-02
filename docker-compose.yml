@@ -1,18 +1,17 @@
 services:
   just-chat-ui-agents:
     container_name: just-chat-ui-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
-    #image: ghcr.io/longevity-genie/just-semantic-search/rag-server:latest
+    image:  ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       APP_DIR: "/app"
-      APP_PORT: "8089" #app port inside container
+      APP_PORT: "8091" #app port inside container
       APP_HOST: "0.0.0.0" #app host inside container, 0's to expose
-      AGENT_PORT: "8089" #agent port for chat to access
+      AGENT_PORT: "8091" #agent port for chat to access
       AGENT_HOST: "http://just-chat-ui-agents" #agent host for chat to access
       #AGENT_WORKERS: "4"
       AGENT_TITLE: "Just Chat-UI REST API node"
       AGENT_PARENT_SECTION: "agent_profiles"
-      AGENT_DEBUG: "false"
+      AGENT_DEBUG: "true"
       AGENT_REMOVE_SYSTEM_PROMPT: "false"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
       USER_ID: ${USER_ID:-${UID}}
@@ -31,17 +30,18 @@ services:
       #AGENT_SECTION: "" # for one agent
       #PYTHONPATH: "/app"
     ports:
-      - "127.0.0.1:8089:8089"
+      - "127.0.0.1:8091:8091"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
     #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    command: ["python", "-m", "just_semantic_search.server.rag_server"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -s 0.0.0.0:8089 | grep -q REST && test -f ./env/.env.local"]
+      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091 | grep -q REST && test -f ./env/.env.local"]
       interval: 15s
       retries: 10
       start_period: 15s
       timeout: 1s
-    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
-    #  - DAC_OVERRIDE
+    cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+      - DAC_OVERRIDE
     depends_on:
       meilisearch:
         condition: service_started
@@ -93,7 +93,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.13.0 # we have to use it because migration got easier
+    image: docker.io/getmeili/meilisearch:v1.13.1  # we have to use it because migration got easier
     environment:
       - http_proxy
       - https_proxy
