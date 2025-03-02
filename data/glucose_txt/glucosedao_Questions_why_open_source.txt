@@ -1,0 +1,21 @@
+How does the GlucoseDao project benefit from being open source?
+
+Community Engagement
+-Increased visibility in the developer community leads to more potential contributors and users
+-Bug fixes and improvements can come from anyone with the skills and motivation
+-Community members can suggest new features and participate in development decisions
+
+Technical Advantages
+-Larger pool of testers helps identify and fix issues more quickly
+-Enhanced security through code transparency and community oversight
+-Potential for community-driven bug fixes and patches that wouldn't be available in closed-source projects
+
+Trust and Sustainability
+-Promotes transparency in data collection and research collaboration
+-Provides business continuity assurance for users and stakeholders
+-Allows for fair profit-sharing through smart contracts when data is used commercially
+
+Research Impact
+-Facilitates collaborative research while maintaining contributor privacy
+-Enables contribution to broader scientific benchmarks like GlucoBench
+-Supports the democratization of valuable health data and insights
