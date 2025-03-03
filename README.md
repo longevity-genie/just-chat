@@ -9,27 +9,21 @@ Make your LLM agent and chat with it simple and fast!
 Just clone repository and run docker-compose!
 ```bash
 git clone https://github.com/winternewt/just-chat.git
+# The following commands set container permissions to match your user account
 USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
-And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
-Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file.
+It will download all the containers and start the application.
 
-If you prefer Podman or use RPM-based distro where it is the default option, you can use alternative Podman installation:
-```bash
-git clone https://github.com/winternewt/just-chat.git
-podman-compose up 
-```
-Unlike Docker, Podman is rootless-by-design maps user and group id automatically. 
-NB! Ubuntu 22 contains podman v.3 which is not fully compatible with this setup, assume podman v4.9.3 or higher is required.
+And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
+
+Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file. We also provide start.sh script to start the application with the current user and group id.
+
+You can also use [docker-desktop](https://www.docker.com/products/docker-desktop/) if you want to start the application with graphical user interface instead of terminal.
 
 You can customize your setup by:
 1. Editing `chat_agent_profiles.yaml` to customize your agent
 2. Adding tools to `/agent_tools` directory to empower your agent
 3. Modifying `docker-compose.yml` for advanced settings (optional)
-
-The only requirement is Docker (or Podman, both are supported)! We provide detailed installation instructions for both Linux and Windows in the [Installation](#installation) section.
-Also check the [notes](#some-notes) section for further information.
-
 
 ## What can you do with Just-Chat?
 - 🚀 Start chatting with one command ( docker compose up )
@@ -43,6 +37,33 @@ Also check the [notes](#some-notes) section for further information.
 We use [just-agents](https://github.com/longevity-genie/just-agents) library to initialize agents from YAML, so most of the modern models ( DeepSeek Reasoner, ChatGPT, LLAMA3.3, etc.) are supported. 
 However, you might need to add your own keys to the environment variables. We provide a free Groq key by default but it is very rate-limited. We recommend getting your own keys,  [Groq](https://console.groq.com/playground) can be a good place to start as it is free and contains many open-source models.
 
+## What if I want to use Podman instead of Docker?
+
+Podman is a safer container environment than Docker. If you prefer Podman or use Fedora or any other RPM-based Linux distribution, you can use it instead of Docker:
+```bash
+git clone https://github.com/winternewt/just-chat.git
+podman compose up 
+```
+Unlike Docker, Podman is rootless-by-design and maps user and group id automatically. 
+
+⚠️ **WARNING**: If using Ubuntu 22.04, do not install Podman from apt, as it contains Podman v.3 which is not fully compatible with this setup. You need Podman v4.9.3 or higher. For this reason we provide an installation script for Podman on Ubuntu in the [Installation](#installation) section.
+
+The only requirement is Docker (or Podman, both are supported)! We provide detailed installation instructions for both Linux and Windows in the [Installation](#installation) section.
+Also check the [notes](#some-notes) section for further information.
+
+## Examples
+
+We provide examples of agents in the `chat_agent_profiles.yaml` file. You can use them as a starting point to create your own agents.
+All examples are provided as models that you can select in the chat interface.
+We have examples for:
+- Sugar-genie - chat for diabetics and people interested in continuous glucose monitoring. It can read additional content from markdown files in the `data/glucosedao_markdown` folder and it can also use meilisearch with vector search (see [Semantic Search with MeiliSearch](#using-semantic-search-with-meilisearch) section) in the research papers
+- Tools-genie - chat bot that can run several toy tools that you find in examples
+- Productivity-genie - chat bot that can give health and productivity advice
+There are also three hidden agents used by the system:
+- Chat naming agent - generates titles for new chats
+- rag-agent - can help making agentic requests to meilisearch
+- index-agent - can help indexing content to meilisearch
+
 ## Project Structure
 
 - [`chat_agent_profiles.yaml`](chat_agent_profiles.yaml) - Configure your agents, their personalities and capabilities, example agents provided.
@@ -51,10 +72,9 @@ However, you might need to add your own keys to the environment variables. We pr
 - [`docker-compose.yml`](docker-compose.yml) - Container orchestration and service configuration.
 - [`/env/`](env/README.md) - Environment configuration files and settings.
 - [`images/`](images/README.md) - Images for the README.
-- [`/logs/`](logs/README.md) - Application logs.
+- [`/logs/`](logs/README.md) - Application logs directory where log files are stored.
 - [`/scripts/`](scripts/README.md) - Utility scripts including Docker installation helpers.
 - [`/volumes/`](volumes/README.md) - Docker volume mounts for persistent storage.
-- `/logs/` - Application logs. We use eliot library for logging
 
 Note: Each folder contains additional README file with more information about the folder contents!
 
@@ -201,12 +221,27 @@ git clone https://github.com/winternewt/just-chat.git
 
 ## Start the application
 ```bash
-docker compose up
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
 
+## Using Semantic Search with MeiliSearch
+
+Just-Chat provides semantic search capabilities using MeiliSearch, which allows your agent to find and reference relevant information from documents based on meaning rather than just keywords:
+
+1. After starting the application, access the API documentation at `localhost:9000/docs`
+2. Use the API to index markdown files (use try it out button):
+   - Example: Index the included GlucoseDAO markdown files to the "glucosedao" index:  
+     `/index_markdown` for the `/app/data/glucosedao_markdown` folder
+3. Enable semantic search in your agent:
+   - Uncomment the system prompt sections in `chat_agent_profiles.yaml` corresponding to search
+   - Set the index to "glucosedao" (or your custom index name if you indexed other content)
+
+Note: the container has everything that you copy to ./data folder as /app/data/
+
+This feature allows your agent to search and reference specific knowledge bases during conversations.
 
 ## Some notes
-0. Be sure to use ```docker pull``` (or podman pull if you use Podman) from time to time since the containers do not always automatically update when image was called with `:latest`
+1. Be sure to use ```docker pull``` (or podman pull if you use Podman) from time to time since the containers do not always automatically update when image was called with `:latest`
    It might even cause errors in running - so keep this in mind.
    
 2. After the application is started, you can access the chat interface at `0.0.0.0:3000`
@@ -238,8 +273,9 @@ docker compose up
      - `docker compose up -d`
    - This prevents port conflicts in future sessions
  
- 6. for editing the model used in chat_agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
-    It is the [just-agents library](https://github.com/longevity-genie/just-agents)
+6. When editing models in `chat_agent_profiles.yaml`, you can use any model type defined in the 
+   [just-agents library](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py).
+   This allows you to easily switch between different LLM providers and models.
 
 
 ## Environment Variables & API Keys Configuration
@@ -249,7 +285,8 @@ The application uses environment variables to store API keys for various Languag
 
 ### Included and Supported Providers
 
-- **GROQ**: A default API key is provided on the first run if no keys are present. However, this key is shared with other users and is rate-limited (you can get rate limit errors from time to time). We recommend getting your own key from [Groq](https://console.groq.com/playground).
+- **GROQ**: A default API key is provided on the first run if no keys are present. However, this key is shared with other users and is rate-limited (you can get rate limit errors from time to time). We recommend getting your own key from [Groq](https://console.groq.com/playground). 
+Note: free models of Groq have very tough rate limits which may cause problems for long chats or RAG, consider registering your own key.
 For additional LLM providers and their respective key configurations, please refer to the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers/).
 
 
@@ -259,7 +296,7 @@ For additional LLM providers and their respective key configurations, please ref
 `docker compose logs -f just-chat-ui-agents`.
 - **Langfuse**: Uncomment and fill in your credentials in `env/.env.keys` to enable additional observability for LLM calls.
 - Note: Langfuse is not enabled by default.
-- NB! `docker compose down` will flush the container logs, but application logs will still be available in the `/logs` directory unless you delete them manually.
+- ⚠️ `docker compose down` will flush the container logs, but application logs will still be available in the `/logs` directory unless you delete them manually.
 
 ### How to Update the API Keys
 

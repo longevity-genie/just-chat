@@ -24,11 +24,8 @@ services:
       MEILI_MASTER_KEY: "fancy_master_key"
       MEILISEARCH_HOST: "meilisearch"
       MEILISEARCH_PORT: "7700"
-      #REMOVE_DD_CONFIGS: "true"
-      #TRAP_CHAT_NAMES: "true"
-      #JSON_FILE_PATTERN: "[0123456789][0123456789]_*.json"
-      #AGENT_SECTION: "" # for one agent
-      #PYTHONPATH: "/app"
+    cap_add: # uncomment this section if you experience permissions issues in podman (Ubuntu 24.04)
+      - DAC_OVERRIDE
     ports:
       - "127.0.0.1:8091:8091"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
@@ -40,8 +37,6 @@ services:
       retries: 10
       start_period: 15s
       timeout: 1s
-    cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
-      - DAC_OVERRIDE
     depends_on:
       meilisearch:
         condition: service_started
@@ -66,8 +61,8 @@ services:
       - "./env/.env.local:/app/.env.local"
     ports:
       - "0.0.0.0:3000:3000"
-    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
-    #  - DAC_OVERRIDE
+    #cap_add:  # uncomment this section if you experience permissions issues in podman 
+    #- DAC_OVERRIDE
     depends_on:
       just-chat-ui-agents:
         condition: service_healthy
@@ -83,11 +78,10 @@ services:
       - ./env/.env.mongo
     ports:
       - "27017"
-    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
-    #  - DAC_OVERRIDE
+    #cap_add:  # uncomment this section if you experience permissions issues in podman 
+    #- DAC_OVERRIDE
     volumes:
       - "mongo-data:/data/db"
-    #  - "./volumes/mongo/db:/data/db"
     depends_on:
       just-chat-ui-agents:
         condition: service_healthy
@@ -106,7 +100,7 @@ services:
       - MEILI_EXPERIMENTAL_ENABLE_VECTORS=true
     ports:
       - 7700:7700
-    # cap_add: # uncomment this section if you experience permissions issues(Ubuntu 24.04)
+    #cap_add:  # uncomment this section if you experience permissions issues in podman 
     #  - DAC_OVERRIDE
     volumes:
       - meili-data:/data.ms
