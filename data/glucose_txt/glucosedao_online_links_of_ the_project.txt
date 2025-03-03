@@ -1,0 +1,26 @@
+Organization's links
+
+-the first site made for GG21
+https://glucosedao.github.io/
+
+-the huggingface Organization
+https://huggingface.co/GlucoseDao
+it is the organization where we are hosting the space
+
+-the huggingface space
+https://huggingface.co/spaces/GlucoseDao/glucosedao
+it is the space where we are hosting the app or at least the demo version of it
+
+-the huggingface dataset
+https://huggingface.co/datasets/Livia-Zaharia/glucose_processed
+it is the dataset used for the model and for the ARDD 2024 figure
+
+-the huggingface model
+https://huggingface.co/Livia-Zaharia/gluformer_models
+is the model used in the first version of the GlucoseDAO app also the one used for the figure at ARDD 2024
+
+-the X page
+https://x.com/glucosedao2024
+
+-the telegram channel
+https://t.me/+yAejJ0xyucExMzg0

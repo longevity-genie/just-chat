@@ -1,0 +1,11 @@
+future Development
+The project is actively seeking additional funding and community participation to expand its scope and capabilities.
+The decentralized approach aims to accelerate discovery in health optimization through community-driven funding and open-access platforms.
+
+Future plans include:
+-developing a glucose prediction game
+-developing a glucose prediction app
+-creating a glucose public dataset
+-partnereing with other longevity projects
+-gathering funding for the project
+-presenting the project at conferences

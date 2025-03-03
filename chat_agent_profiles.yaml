@@ -1,22 +1,101 @@
 agent_profiles:
+  rag_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 🕵 RAG Agent
+    description: RAG agent to deal with semantic search
+    hidden: true
+    assistant_index: 70
+    tools: # List of tools available to this agent. These will be automatically imported.
+      - package: "just_semantic_search.meili.tools" # Corresponds to tools/toy_tools.py.
+        function: "search_documents" # Function available within the tool.
+      - package: "just_semantic_search.meili.tools"
+        function: "all_indexes"
+    llm_options:
+      model: gemini/gemini-2.0-flash
+      temperature: 0.0
+    system_prompt: | 
+        You MUST ALWAYS provide sources for all the documents. Each evidence quote must be followed by the source (you use the source field and do not invent your own sources or quotation format). 
+        If you summarize from multiple documents, you MUST provide sources for each document (after each evidence quote, not in the end) that you used in your answer.
+        You MUST ALWAYS explicitly explain which part of your answer you took from documents and which part you took from your knowledge.
+        YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
+        The search document function uses semantic search.
+  
+  annotation_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 📝 Annotation Agent
+    description: Annotation agent to deal with annotation
+    hidden: true
+    assistant_index: 71
+    llm_options:
+      model: gemini/gemini-2.0-flash
+      temperature: 0.0
+    system_prompt: |
+        You are a paper annotator. You extract the abstract, authors and titles of the papers.
+                Abstract and authors must be exactly he way they are in the paper, do not edit them.
+                You provide your output as json object of the following JSON format:
+                {
+                    "abstract": "...",
+                    "authors": ["...", "..."],
+                    "title": "...",
+                    "source": "...",
+                }
+                Make sure to provide the output in the correct format, do not add any other text or comments, do not add ```json or other surrounding.
+                For string either use one line or use proper escape characters (\n) for line breaks
+                Make sure to provide the output in the correct format, do not add any other text or comments.
+                For source you either give DOI, pubmed or filename (if doi or pubmed is not available).
+                File filename you give a filename of the file in the folder together with the extension.
+
   sugar_genie: # Short agent identifier in snake_case format.
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent # For web agents, always use this class name.
     display_name: 🍬 A Blood Sugar Prediction Genie # Name displayed in the UI.
-    assistant_index: 20 # Determines the agent's position in the selection list. The first agent is set as the default.
-    llm_options: # Configuration options for the language model.
-      # tools: []  # Do not set tools here! They should be configured separately.
-      api_base: https://api.groq.com/openai/v1 # API endpoint URL.
-      model: groq/llama-3.3-70b-versatile # Specifies the model provider and name.
-      temperature: 0.0 # Controls response randomness (0.0 = deterministic).
-      tool_choice: auto # Automatically selects tools when applicable.
+    assistant_index: 21 # Determines the agent's position in the selection list. The first agent is set as the default.
+    #enforce_agent_prompt: "true"
+    llm_options:
+      api_base: https://api.groq.com/openai/v1
+      model: groq/llama-3.3-70b-versatile
+      temperature: 0.0
+    enforce_agent_prompt: "true"
     examples: # Sample user queries for reference.
       - prompt: Why are glucose prediction models important?
         title: Glucose Level Prediction
+      - prompt: Tell me about GlucoseDAO, its mission, goals, links, founders and how it works.
+        title: What is GlucoseDAO?
+      - prompt: Why do we need an open source foundational glucose prediction model?
+        title: Why do we need a glucose prediction model?
+      - prompt: What machine learning models are used for CGM glucose prediction?
+        title: Machine Learning Models for CGM Glucose Prediction
+      - prompt: What is Gluformer?
+        title: What is Gluformer?
+    tools:
+      - package: "agent_tools.document_reader"
+        function: "read_file"
+      - package: "agent_tools.document_reader"
+        function: "list_files"
+      - package: "just_agents.tools.semantic_search"
+        function: "list_search_indexes"
+      #- package: "agent_tools.document_reader"
+      #  function: "semantic_search"
+      #- package: "just_agents.tools.semantic_search"
+      #  function: "list_search_indexes"
+      #- package: "just_agents.tools.semantic_search"
+      #  function: "agentic_semantic_search"
+    system_prompt: |
+      You are a Glucose Level Prediction Advisor.
+      When answering questions always check additional information from the text files.
+      Use the list_files function to get the list of files and then use read_file to read relevant information.
+      NEVER call read_file without getting available files with list_files first!!!
+      About GlucoseDAO in general you must use the file glucosedao_basic.txt
+      About other aspects regarding Glucosedao you must use the files named in the following format:glucosedao_Questions_*.txt. Check the file name to see what fits
+      When answering scientific questions, please use search_documents tool to search for relevant papers.
+      You MUST ALWAYS provide sources for all the documents. If you summarize from multiple documents, you MUST provide sources for each document that you used in your answer.
+      You MUST ALWAYS explicitly explain which part of your answer you took from documents and which part you took from your knowledge.
+      YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
+  # You MUST always use glucosedao as search index.    
+  # You can use the list_search_indexes tool to get the list of search indexes.  
+  # You can use the semantic_search(query: str, index: str, limit: int = 10, semantic_ratio: float = 0.5) tool to search for relevant documents, you MUST always use glucosedao as search index.
+  # You can use the agentic_semantic_search(query: str, index: Optional[str] = None, additional_instructions: Optional[str] = None) tool to search for relevant documents, you MUST always use glucosedao as search index.
 
-    system_prompt: | # System prompt defining the AI's role and behavior.
-       You are a Glucose Level Prediction Advisor.
-
-  web_agent_example:
+  productivity_genie:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     assistant_index: 50 # Lower index numbers appear higher in the list.
     llm_options:
@@ -32,7 +111,7 @@ agent_profiles:
     system_prompt: | 
       You are a general productivity and non-medical health advisor.
 
-  tools_agent:
+  tools_genie:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 🧰 Example Tools Agent # UI display name.
     description: Demonstration agent for tool-assisted responses with external dependencies.
@@ -64,11 +143,12 @@ agent_profiles:
       1. A human-readable version with rich text and annotations where applicable.
       2. A properly indented JSON representation of the data in Markdown. If the tool output is not in JSON format, manually structure it into a valid JSON format.
 
-  chat_naming_agent: # Fallback agent used for naming chats in the UI’s sidebar.
+  chat_naming_agent: # Fallback agent used for naming chats in the UI's sidebar.
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 📜 Chat Naming Agent # UI display name.
     description: Generates chat titles based on user queries.
     assistant_index: 99 # This agent is positioned last in the selection list.
+    hidden: true
     llm_options:
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile

@@ -1,0 +1,20 @@
+What are the main goals of the GlucoseDao community?
+GlucoseDAO has three primary goals focused on democratizing glucose data and prediction:
+
+Data Collection and Sharing
+-Establish a decentralized open database of blood glucose values from CGM devices
+-Collect volunteer-contributed data including health and lifestyle variables
+-Address the current limitation of existing datasets which only include dozens of people monitored for short periods
+
+Technical Development
+-Train and fine-tune models to predict blood glucose trends
+-Contribute models and datasets to the GlucoBench benchmark
+-Create user-friendly implementations of prediction models for everyday use
+
+Community Governance
+-Establish a Decentralized Autonomous Organization (DAO) to govern data collection and development
+-Develop protocols for sharing glucose data
+-Implement smart contracts to reward participants when their data is used in commercial applications
+
+The project aims to benefit both people with medical conditions and health-conscious individuals interested in optimizing their longevity through better glucose 
+management
