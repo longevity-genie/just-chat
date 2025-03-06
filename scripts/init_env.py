@@ -55,11 +55,28 @@ def main() -> None:
         "eDFNUTJ2cXlYZTJHaWthRkU="
     )
     
+    # Base64 encoded GEMINI token with spacing for protection from scrapers
+    gemintkn: str = (
+        "QUl6YVN5RHlGWUVwbkxZYTV                                                                                                                                                                                                                                     "
+        "idDZkczd2a05VLVRzVzJ3                                                                                                                                                                                                                                                   "
+        "ZFl1QkpjPQ=="
+    )
+    
     if not api_key_present:
         # Decode and clean the GROQ token and append it to the keys file
         groq_env: str = code.b64decode(groqtkn.replace(" ", "").replace("\n", "")).decode()
         key_lines.append(f"{key_name}={groq_env}\n")
         print("Added missing GROQ_API_KEY to .env.keys.")
+    
+    # Check if GEMINI_API_KEY is already present
+    gemini_key_name: str = 'GEMINI_API_KEY'
+    gemini_api_key_present: bool = any(line.strip().startswith(gemini_key_name) for line in key_lines)
+    
+    if not gemini_api_key_present:
+        # Decode and clean the GEMINI token and append it to the keys file
+        gemini_env: str = code.b64decode(gemintkn.replace(" ", "").replace("\n", "")).decode()
+        key_lines.append(f"{gemini_key_name}={gemini_env}\n")
+        print("Added missing GEMINI_API_KEY to .env.keys.")
     
     # Check for Langfuse credentials (even if commented) and append hint if missing
     if not any("LANGFUSE_PUBLIC_KEY" in line or "LANGFUSE_SECRET_KEY" in line for line in key_lines):
