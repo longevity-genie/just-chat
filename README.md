@@ -8,7 +8,7 @@ Make your LLM agent and chat with it simple and fast!
 
 Just clone repository and run docker-compose!
 ```bash
-git clone https://github.com/winternewt/just-chat.git
+git clone git@github.com:longevity-genie/just-chat.git
 USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
 And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
@@ -16,11 +16,13 @@ Note: container will be started with the user and group of the host machine to a
 
 If you prefer Podman or use RPM-based distro where it is the default option, you can use alternative Podman installation:
 ```bash
-git clone https://github.com/winternewt/just-chat.git
+git clone git@github.com:longevity-genie/just-chat.git
 podman-compose up 
 ```
 Unlike Docker, Podman is rootless-by-design maps user and group id automatically. 
 NB! Ubuntu 22 contains podman v.3 which is not fully compatible with this setup, assume podman v4.9.3 or higher is required.
+
+
 
 You can customize your setup by:
 1. Editing `chat_agent_profiles.yaml` to customize your agent
@@ -42,6 +44,20 @@ Also check the [notes](#some-notes) section for further information.
 
 We use [just-agents](https://github.com/longevity-genie/just-agents) library to initialize agents from YAML, so most of the modern models ( DeepSeek Reasoner, ChatGPT, LLAMA3.3, etc.) are supported. 
 However, you might need to add your own keys to the environment variables. We provide a free Groq key by default but it is very rate-limited. We recommend getting your own keys,  [Groq](https://console.groq.com/playground) can be a good place to start as it is free and contains many open-source models.
+
+## What if I want to use Podman instead of Docker?
+
+Podman is a safer container environment than Docker. If you prefer Podman or use Fedora or any other RPM-based Linux distribution, you can use it instead of Docker:
+```bash
+git clone https://github.com/winternewt/just-chat.git
+podman compose up 
+```
+Unlike Docker, Podman is rootless-by-design and maps user and group id automatically. 
+
+⚠️ **WARNING**: If using Ubuntu 22.04, do not install Podman from apt, as it contains Podman v.3 which is not fully compatible with this setup. You need Podman v4.9.3 or higher. For this reason we provide an installation script for Podman on Ubuntu in the [Installation](#installation) section.
+
+The only requirement is Docker (or Podman, both are supported)! We provide detailed installation instructions for both Linux and Windows in the [Installation](#installation) section.
+Also check the [notes](#some-notes) section for further information.
 
 ## Project Structure
 
@@ -71,7 +87,7 @@ Detailed docker instructions:
 
 Refer to the official guides: 
  - [Docker Installation Guide](https://docs.docker.com/engine/install/ubuntu/).
- - [Docker-compose Standalone Installation Guide](https://docs.docker.com/compose/install/standalone/).
+ - [Docker Compose Standalone Installation Guide](https://docs.docker.com/compose/install/standalone/).
  
 For Ubuntu users, you can review and use the provided convenience.sh script:
 ```bash
@@ -104,6 +120,9 @@ curl -SL https://github.com/docker/compose/releases/download/v2.32.4/docker-comp
 chmod +x /usr/local/bin/docker-compose
 sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```
+
+Note: at many systems it can be `docker compose` (without `-`)
+
 </details>
 
 <details>
@@ -201,8 +220,27 @@ git clone https://github.com/winternewt/just-chat.git
 
 ## Start the application
 ```bash
-docker compose up
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
+Note: Here we use USER_ID=$(id -u) GROUP_ID=$(id -g) to run as current user instead of root, but if it does not matter for you can simply run docker compose up
+We also provide experimental start and stop bash (for Linux) and bat (for Windows) scripts.
+
+## Using Semantic Search with MeiliSearch
+
+Just-Chat provides semantic search capabilities using MeiliSearch, which allows your agent to find and reference relevant information from documents based on meaning rather than just keywords:
+
+1. After starting the application, access the API documentation at `localhost:9000/docs`
+2. Use the API to index markdown files (use try it out button):
+   - Example: Index the included GlucoseDAO markdown files to the "glucosedao" index:  
+     `/index_markdown` for the `/app/data/glucosedao_markdown` folder
+3. Enable semantic search in your agent:
+   - Uncomment the system prompt sections in `chat_agent_profiles.yaml` corresponding to search
+   - Set the index to "glucosedao" (or your custom index name if you indexed other content)
+
+Note: the container has everything that you copy to ./data folder as /app/data/
+
+This feature allows your agent to search and reference specific knowledge bases during conversations.
+
 
 
 ## Some notes
@@ -213,7 +251,7 @@ docker compose up
 
 3. Key settings in `docker-compose.yml` (or podman-compose.yml if you use Podman):
    - UI Port: `0.0.0.0:3000` (under `huggingchat-ui` service)
-   - Agent Port: `127.0.0.1:8089:8089` (under `just-chat-ui-agents` service)
+   - Agent Port: `127.0.0.1:8091:8091` (under `just-chat-ui-agents` service)
    - MongoDB Port: `27017` (under `chat-mongo` service)
    - Container image versions:
      - just-chat-ui-agents: `ghcr.io/longevity-genie/just-agents/chat-ui-agents:main`
@@ -251,6 +289,12 @@ The application uses environment variables to store API keys for various Languag
 
 - **GROQ**: A default API key is provided on the first run if no keys are present. However, this key is shared with other users and is rate-limited (you can get rate limit errors from time to time). We recommend getting your own key from [Groq](https://console.groq.com/playground).
 For additional LLM providers and their respective key configurations, please refer to the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers/).
+
+### Setting up MeiliSearch and adding additional sources
+
+We provide meilisearch semantic search with an ability to add your own documents. You can use corresponding REST API methods either via calls or with a default SWAGGER UI (just open just-chat-agents which uses localhost:8091 by default)
+For your own documents we use MISTRAL_OCR to parse PDFs, so if you want to upload PDFs, please add MISTRAL_API_KEY to env/.env.keys
+For autoannotation free GROQ key may no be enough because of rate limits. Please, either provide a paid GROQ key or change the model at annotation_agent.
 
 
 ### Logging and Observability
