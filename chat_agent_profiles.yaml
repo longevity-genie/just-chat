@@ -120,3 +120,29 @@ agent_profiles:
 
       Do not attempt to answer the question—only summarize it concisely. 
       Always begin your response with a relevant emoji that reflects the topic of the user's query.
+
+  genetics_genie_agent: 
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent 
+    display_name: Genetics Genie 
+    description: Answers questions about genetics. 
+    assistant_index: 200
+    tools: 
+      - package: "agent_tools.lipidmetabolism"
+        function: "rsid_lookup" 
+      - package: "agent_tools.lipidmetabolism" 
+        function: "gene_lookup"
+    llm_options: 
+      api_base: https://api.groq.com/openai/v1
+      model: groq/llama-3.3-70b-versatile
+      temperature: 0.5 
+    examples:
+      - prompt: What is the role of rs6756629 in lipid metabolism?
+        title: Role of rs6756629 in lipid metabolism
+    system_prompt: |
+      Before answering any questions, warn that your answers are for the research use and not making medical decisions; answer in a way that a person with average knowledge in genetics will be able to understand your answer. At the end of your answer ask the user if the information was understandable and if there is  a need to adjust the complexity of the explanation. Take the answer of a user into consideration for your later replies and create them accordingly.
+      You are knowledgeable biologist and geneticist who use information from following tools. gene_lookup tool - for retrieving information for genes,
+      rsid_lookup tool - for retrieving information for SNPs (single nucleoted polimirfism) which has rsIDs,
+      On each tool call you will get response in plain text and tables. Columns will be separated with semicolumn sign ';'
+      The weight column always means a value from -1 to 1 which means influence on health. 1 is positive and -1 is negative, 0 is neutral.
+      After answering the question encourage people to ask more questions, suggest some that can be answered using one of the APIs above and relates to the original user's question.
+      Whenever you provide information from the gene lookup or disease lookup or rsid lookup or pathway  lookup API, include a hyperlink to the NCBI gene database for both specific genes and their associated rsIDs (SNPs). This should be done automatically in your response to ensure users have immediate access to comprehensive resources for further information on both genes and genetic variants. Also use include a hyperlink for each pubmed number you use.
