@@ -3,27 +3,40 @@ services:
     container_name: just-chat-ui-agents
     image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
     environment:
-      APP_PORT: "8089" #app port inside container
-      APP_HOST: "0.0.0.0" #app host inside container, 0's to expose
-      AGENT_PORT: "8089" #agent port for chat to access
-      AGENT_HOST: "http://just-chat-ui-agents" #agent host for chat to access
-      #AGENT_WORKERS: "4"
+      # Web server configuration
+      APP_HOST: "0.0.0.0" # app host inside container, 0's to expose
+      APP_PORT: "8089" # app port inside container
+      
+      # Agent core configuration
       AGENT_TITLE: "Just Chat-UI REST API node"
+      AGENT_WORKERS: "1"
+      AGENT_SECTION: "" # for one agent
       AGENT_PARENT_SECTION: "agent_profiles"
+      AGENT_FAILFAST: "true" # fail fast on startup in case of profile errors or just drop bad profiles
       AGENT_DEBUG: "false"
-      AGENT_REMOVE_SYSTEM_PROMPT: "false"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
+      
+      # Agent connectivity for chat UI
+      AGENT_HOST: "http://just-chat-ui-agents" # agent host for chat to access
+      AGENT_PORT: "8089" # agent port for chat to access
+      
+      # Directory configuration
+      APP_DIR: "/app"
+      TMP_DIR: "tmp"
+      LOG_DIR: "logs"
+      DATA_DIR: "data"
+      MODELS_DIR: "/app/models.d" # used by chat-ui to get models
+      
+      # Environment files
+      ENV_KEYS_PATH: "/app/env/.env.keys" # used by agents to get keys
+      ENV_MODELS_PATH: "/app/env/.env.local" # used by chat-ui to get models
+      
+      # Additional configuration options
+      TRAP_CHAT_NAMES: "true" #re-route naming to dedicated agent or use default (first in list) agent intead for this purpose
+      
+      # User/group configuration
       USER_ID: ${USER_ID:-${UID}}
       GROUP_ID: ${GROUP_ID:-${GID}}
-      MODELS_DIR: "/app/models.d"
-      ENV_KEYS_PATH: "/app/env/.env.keys"
-      ENV_MODELS_PATH: "/app/env/.env.local"
-      AGENT_FAILFAST: "true"
-      #REMOVE_DD_CONFIGS: "true"
-      #TRAP_CHAT_NAMES: "true"
-      #JSON_FILE_PATTERN: "[0123456789][0123456789]_*.json"
-      #AGENT_SECTION: "" # for one agent
-      #PYTHONPATH: "/app"
     ports:
       - "127.0.0.1:8089:8089"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
@@ -37,7 +50,7 @@ services:
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
       - "./scripts/init_env.py:/app/init.py"
-      - "./data:/data"
+      - "./data:/app/data"
       - "./env:/app/env"
       - "./logs:/app/logs"
       - "./scripts:/app/scripts"

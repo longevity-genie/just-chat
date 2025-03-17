@@ -1,35 +1,15 @@
 agent_profiles:
+
   sugar_genie: # Short agent identifier in snake_case format.
-    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent # For web agents, always use this class name.
-    display_name: 🍬 A Blood Sugar Prediction Genie # Name displayed in the UI.
-    assistant_index: 20 # Determines the agent's position in the selection list. The first agent is set as the default.
-    llm_options: # Configuration options for the language model.
-      # tools: []  # Do not set tools here! They should be configured separately.
-      api_base: https://api.groq.com/openai/v1 # API endpoint URL.
-      model: groq/llama-3.3-70b-versatile # Specifies the model provider and name.
-      temperature: 0.0 # Controls response randomness (0.0 = deterministic).
-      tool_choice: auto # Automatically selects tools when applicable.
-    examples: # Sample user queries for reference.
-      - prompt: Why are glucose prediction models important?
-        title: Glucose Level Prediction
-
-    system_prompt: | # System prompt defining the AI's role and behavior.
-       You are a Glucose Level Prediction Advisor.
-
-  sugar_genie_GEMINI: # Short agent identifier in snake_case format.
-    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent # For web agents, always use this class name.
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent # For chat agents, always use this class name.
     display_name: 🍬 A Blood Sugar Prediction Genie # Name displayed in the UI.
     assistant_index: 21 # Determines the agent's position in the selection list. The first agent is set as the default.
-    tools: # List of tools available to this agent. These will be automatically imported.
-      - package: "agent_tools.document_reader" # Corresponds to tools/toy_tools.py.
-        function: "read_file" # Function available within the tool.
-      - package: "agent_tools.document_reader" # Corresponds to tools/toy_tools.py.
-        function: "list_files" # Function available within the tool.
+    #enforce_agent_prompt: "true"
     llm_options:
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.0
-    enforce_agent_prompt: "true"
+    raise_on_completion_status_errors: "false" #report API errors into chat
     examples: # Sample user queries for reference.
       - prompt: Why are glucose prediction models important?
         title: Glucose Level Prediction
@@ -41,39 +21,34 @@ agent_profiles:
         title: Machine Learning Models for CGM Glucose Prediction
       - prompt: What is Gluformer?
         title: What is Gluformer?
-   
+    prompt_tools: # similar to tools but is called by agent itself without a need for LLM call. Results are added to prompt dynamically on each completion
+      - package: "agent_tools.data_tools"
+        function: "list_files"
+        call_arguments:
+          show_all: False # we only want text
+          subdir: "glucose_txt"
+          as_json: True
+    tools:
+    #  - package: "agent_tools.data_tools"
+    #    function: "list_files"
+      - package: "agent_tools.data_tools"
+        function: "read_file"
+
     system_prompt: |
-      You are a Glucose Level Prediction Advisor.
-      When answering questions always check additional information from the text files.
-      Use the list_files function to get the list of files and then use read_file to read relevant information.
-      NEVER call read_file without getting available files with list_files first!!!
-      About GlucoseDAO in general you must use the file glucosedao_basic.txt
+      You are a Glucose Level Prediction Advisor. 
+      
+      When answering questions you always check additional information from the text files. 
+      To do so, you are provided with a tool 'list_files' and a listing output, specifying data files available to you in a json format. 
+      Info about GlucoseDAO in general can be looked up in 'glucosedao_basic.txt', refer to listing for exact path.
       About other aspects regarding Glucosedao you must use the files named in the following format:glucosedao_Questions_*.txt. Check the file name to see what fits
-      When answering scientific questions, please use search_documents tool to search for relevant papers.
+      You NEVER try to access more than three files in one go; if you need to: first give user intermediary results to user and ask if they wish to continue
       You MUST ALWAYS provide sources for all the documents. If you summarize from multiple documents, you MUST provide sources for each document that you used in your answer.
-      You MUST ALWAYS explicetly explain which part of your answer you took from documents and which part you took from your knowledge.
-      YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MULTIPLE TIMES.
-      The search document function uses semantic search.
+      You MUST ALWAYS explicitly explain which part of your answer you took from which document and which part you took from your knowledge.
+#      The listing in this prompt is always up-to-date and valid. You do not need to call 'list_files' yourself again, unless user specifically asks you to.
 
-  web_agent_example:
+  toy_tools_agent:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
-    assistant_index: 50 # Lower index numbers appear higher in the list.
-    llm_options:
-      api_base: https://api.groq.com/openai/v1
-      model: groq/llama-3.3-70b-versatile
-      temperature: 0.0
-    examples:
-      - prompt: I can't sleep; my thoughts keep racing! What should I do?
-        title: Insomnia
-      - prompt: I feel anxious and impatient. What would you advise?
-        title: Anxiety Remediation Advice
-
-    system_prompt: | 
-      You are a general productivity and non-medical health advisor.
-
-  tools_agent:
-    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
-    display_name: 🧰 Example Tools Agent # UI display name.
+    display_name: 🧰 Example Toy Tools Agent # UI display name.
     description: Demonstration agent for tool-assisted responses with external dependencies.
     assistant_index: 70
     tools: # List of tools available to this agent. These will be automatically imported.
@@ -107,6 +82,7 @@ agent_profiles:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 📜 Chat Naming Agent # UI display name.
     description: Generates chat titles based on user queries.
+    hidden: true #hides agent form UI
     assistant_index: 99 # This agent is positioned last in the selection list.
     llm_options:
       api_base: https://api.groq.com/openai/v1
