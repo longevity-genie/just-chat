@@ -1,0 +1,52 @@
+{
+  "name": "Just Chat Agents Dev Container",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "just-chat-agents",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "formulahendry.docker-explorer",
+        "cweijan.vscode-docker-client"
+      ],
+      "settings": {
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "python.analysis.extraPaths": [
+          "/app",
+          "/app/agent_tools"
+        ]
+      },
+      "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+          {
+            "label": "Restart Docker Compose",
+            "type": "shell",
+            "command": "cd /workspaceFolder && docker-compose down && docker-compose up -d",
+            "problemMatcher": []
+          }
+        ]
+      },
+      "keybindings": [
+        {
+          "key": "ctrl+shift+r",
+          "command": "workbench.action.terminal.sendSequence",
+          "args": { "text": "cd /app && docker-compose restart\n" }
+        }
+      ]
+    }
+  },
+  "postCreateCommand": "python /app/init.py",
+  "overrideCommand": false
+} 

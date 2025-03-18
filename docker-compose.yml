@@ -51,7 +51,7 @@ services:
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
     #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'REST' && test -f ./env/.env.local"]
+      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'endpoint' && test -f ./env/.env.local"]
       interval: 15s
       retries: 10
       start_period: 15s
@@ -66,7 +66,7 @@ services:
       - "./agent_tools:/app/agent_tools"
       - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
     restart: on-failure:3
-    command: "python -m just_semantic_search.server.rag_server --agent-profiles ./chat_agent_profiles.yaml"
+    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles ./chat_agent_profiles.yaml"
 
   huggingchat-ui:
     container_name: chat-ui
