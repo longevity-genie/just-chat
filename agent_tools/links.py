@@ -1,13 +1,13 @@
 import regex as re
 
 def link_rsID(rsid:str) -> str:
-    return f"<a href='https://www.ncbi.nlm.nih.gov/snp/?term={rsid}'>" + rsid + "</a>"
+    return f"https://www.ncbi.nlm.nih.gov/snp/?term={rsid}"
 
 def link_PubMed(pubmed_id:str) -> str:
-    return f"<a href='https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}'>" + pubmed_id + "</a>"
+    return f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}"
 
 def link_gene(gene:str) -> str:
-    return f"<a href='https://www.ncbi.nlm.nih.gov/gene/?term={gene}'>" + gene + "</a>"
+    return f"https://www.ncbi.nlm.nih.gov/gene/?term={gene}"
 
 def replace_rsid(text:str) -> str:
     rsid_pattern = r'rs\d+'

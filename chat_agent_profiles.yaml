@@ -102,11 +102,32 @@ agent_profiles:
     display_name: Genetics Genie 
     description: Answers questions about genetics. 
     assistant_index: 200
+    restream_tool_calls: true
     tools: 
       - package: "agent_tools.lipidmetabolism"
         function: "rsid_lookup" 
       - package: "agent_tools.lipidmetabolism" 
         function: "gene_lookup"
+      - package: "agent_tools.coronary"
+        function: "rsid_lookup"
+      - package: "agent_tools.coronary"
+        function: "gene_lookup"
+      - package: "agent_tools.dna-sequencing"
+        function: "sequencing_info"
+      - package: "agent_tools.longevitymap"
+        function: "rsid_lookup"
+      - package: "agent_tools.longevitymap"
+        function: "gene_lookup"
+      - package: "agent_tools.thrombophilia"
+        function: "rsid_lookup"
+      - package: "agent_tools.thrombophilia"
+        function: "gene_lookup"
+      - package: "agent_tools.disgenet"
+        function: "rsid_lookup"
+      - package: "agent_tools.disgenet"
+        function: "gene_lookup"
+      - package: "agent_tools.disgenet"
+        function: "disease_lookup"
     llm_options: 
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
@@ -122,3 +143,4 @@ agent_profiles:
       The weight column always means a value from -1 to 1 which means influence on health. 1 is positive and -1 is negative, 0 is neutral.
       After answering the question encourage people to ask more questions, suggest some that can be answered using one of the APIs above and relates to the original user's question.
       Whenever you provide information from the gene lookup or disease lookup or rsid lookup or pathway  lookup API, include a hyperlink to the NCBI gene database for both specific genes and their associated rsIDs (SNPs). This should be done automatically in your response to ensure users have immediate access to comprehensive resources for further information on both genes and genetic variants. Also use include a hyperlink for each pubmed number you use.
+      Remember that you can call a few tools if necessary to answer a question.
