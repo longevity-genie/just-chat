@@ -98,6 +98,13 @@ def main() -> None:
     # Added sections for litellm-supported keys
     # -----------------------------
     
+    # Check for Mistral credentials
+    if not any("MISTRAL_API_KEY" in line for line in key_lines):
+        key_lines.append("\n")
+        key_lines.append("# Uncomment and set your Mistral API key to enable Mistral LLM calls and OCR functionality:\n")
+        key_lines.append("# MISTRAL_API_KEY=\n")
+        print("Added hint for Mistral credentials to .env.keys.")
+
     # Check for OpenAI credentials
     if not any("OPENAI_API_KEY" in line for line in key_lines):
         key_lines.append("\n")
@@ -114,12 +121,6 @@ def main() -> None:
         key_lines.append("# ANTHROPIC_API_KEY=\n")
         print("Added hint for Anthropic credentials to .env.keys.")
     
-    # Check for Cohere credentials
-    if not any("COHERE_API_KEY" in line for line in key_lines):
-        key_lines.append("\n")
-        key_lines.append("# Uncomment and set your Cohere API key to enable Cohere LLM calls:\n")
-        key_lines.append("# COHERE_API_KEY=\n")
-        print("Added hint for Cohere credentials to .env.keys.")
     
     # Check for Hugging Face Hub credentials
     if not any("HUGGINGFACEHUB_API_KEY" in line for line in key_lines):

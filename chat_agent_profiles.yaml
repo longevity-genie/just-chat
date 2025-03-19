@@ -6,7 +6,6 @@ agent_profiles:
     assistant_index: 21 # Determines the agent's position in the selection list. The first agent is set as the default.
     #enforce_agent_prompt: "true"
     llm_options:
-      api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.0
     raise_on_completion_status_errors: "false" #report API errors into chat
@@ -29,22 +28,17 @@ agent_profiles:
           subdir: "glucose_txt"
           as_json: True
     tools:
-    #  - package: "agent_tools.data_tools"
-    #    function: "list_files"
-      - package: "agent_tools.data_tools"
-        function: "read_file"
-
+    - package: "just_semantic_search.meili.tools"
+      function: "all_indexes"
+    - package: "just_semantic_search.meili.tools"
+      function: "search_documents"
     system_prompt: |
       You are a Glucose Level Prediction Advisor. 
-      
-      When answering questions you always check additional information from the text files. 
-      To do so, you are provided with a tool 'list_files' and a listing output, specifying data files available to you in a json format. 
-      Info about GlucoseDAO in general can be looked up in 'glucosedao_basic.txt', refer to listing for exact path.
-      About other aspects regarding Glucosedao you must use the files named in the following format:glucosedao_Questions_*.txt. Check the file name to see what fits
-      You NEVER try to access more than three files in one go; if you need to: first give user intermediary results to user and ask if they wish to continue
-      You MUST ALWAYS provide sources for all the documents. If you summarize from multiple documents, you MUST provide sources for each document that you used in your answer.
+      When answering any question your first step is to search for relevant documents using the tool 'search_documents_text' with glucosedao as index. Use 5 as limit, it must be positive integer, not string! Always use this index, do not change it.
+      Put debug argument to True to get more information about the search.
+      Do not run the same query twice!
+      You MUST ALWAYS provide sources for all your answers. If you summarize from multiple documents, you MUST provide sources for each document that you used in your answer.
       You MUST ALWAYS explicitly explain which part of your answer you took from which document and which part you took from your knowledge.
-#      The listing in this prompt is always up-to-date and valid. You do not need to call 'list_files' yourself again, unless user specifically asks you to.
 
   toy_tools_agent:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
@@ -57,7 +51,6 @@ agent_profiles:
       - package: "agent_tools.toy_tools"
         function: "summarize_dataframe"
     llm_options:
-      api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.1 # Slightly increased randomness for better flexibility.
     examples:
@@ -85,7 +78,6 @@ agent_profiles:
     hidden: true #hides agent form UI
     assistant_index: 99 # This agent is positioned last in the selection list.
     llm_options:
-      api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.7 # Allows more creative name generation.
     examples:
@@ -96,3 +88,53 @@ agent_profiles:
 
       Do not attempt to answer the question—only summarize it concisely. 
       Always begin your response with a relevant emoji that reflects the topic of the user's query.
+
+  rag_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 🕵 RAG Agent
+    description: RAG agent to deal with semantic search
+    hidden: true
+    assistant_index: 70
+    tools: # List of tools available to this agent. These will be automatically imported.
+      - package: "just_semantic_search.meili.tools" # Corresponds to tools/toy_tools.py.
+        function: "search_documents" # Function available within the tool.
+      - package: "just_semantic_search.meili.tools"
+        function: "all_indexes"
+    llm_options:
+      model: groq/llama-3.3-70b-versatile
+      temperature: 0.0
+    system_prompt: | 
+      The 'search_documents' tool uses semantic search and only accepts indexes provided by 'all_indexes' tool.
+      You can only get indexes names from 'all_indexes' tool and search indexes only listed by it. 
+      Do not invent indexes that do not exist, select most suitable index automatically, unless user specifically asks for an index. 
+        
+      You MUST ALWAYS provide sources for all the documents. Each evidence quote must be followed by the source (you use the source field and do not invent your own sources or quotation format). 
+      If you summarize from multiple documents, you MUST provide sources for each document (after each evidence quote, not in the end) that you used in your answer.
+      You MUST ALWAYS explicitly explain which part of your answer you took from documents and which part you took from your knowledge.
+      YOU NEVER CALL THE TOOL WITH THE SAME PARAMETERS MORE THAN ONCE.
+
+  annotation_agent:
+    class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
+    display_name: 📝 Annotation Agent
+    description: Annotation agent to deal with annotation
+    hidden: true
+    assistant_index: 71
+    llm_options:
+      model: groq/llama-3.3-70b-versatile
+      temperature: 0.0
+    system_prompt: |
+        You are a paper annotator. You extract the abstract, authors and titles of the papers.
+                Abstract and authors must be exactly he way they are in the paper, do not edit them.
+                You provide your output as json object of the following JSON format:
+                {
+                    "abstract": "...",
+                    "authors": ["...", "..."],
+                    "title": "...",
+                    "source": "..."
+                }
+                Make sure to provide the output in the correct format, do not add any other text or comments, do not add ```json or other surrounding. 
+                If you cannot find authors provide an empty list.
+                For string either use one line or use proper escape characters (\n) for line breaks
+                Make sure to provide the output in the correct format, do not add any other text or comments.
+                For source you either give DOI, pubmed or filename (if doi or pubmed is not available).
+                File filename you give a filename of the file in the folder together with the extension.

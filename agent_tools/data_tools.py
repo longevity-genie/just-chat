@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Dict, List, Union, Optional, Any, Literal
 import os
 from pydantic import BaseModel, Field, RootModel
-
 from just_agents.just_bus import JustLogBus
 
 
