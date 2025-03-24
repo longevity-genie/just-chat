@@ -102,6 +102,8 @@ agent_profiles:
     display_name: Genetics Genie 
     description: Answers questions about genetics. 
     assistant_index: 200
+    supports_vision_override: true
+    multimodal: true
     restream_tool_calls: true
     tools: 
       - package: "agent_tools.lipidmetabolism"
@@ -122,12 +124,12 @@ agent_profiles:
         function: "rsid_lookup"
       - package: "agent_tools.thrombophilia"
         function: "gene_lookup"
-      - package: "agent_tools.disgenet"
-        function: "rsid_lookup"
-      - package: "agent_tools.disgenet"
-        function: "gene_lookup"
-      - package: "agent_tools.disgenet"
-        function: "disease_lookup"
+   #   - package: "agent_tools.disgenet"
+   #     function: "rsid_lookup"
+   #   - package: "agent_tools.disgenet"
+   #     function: "gene_lookup"
+   #   - package: "agent_tools.disgenet"
+   #     function: "disease_lookup"
     llm_options: 
       api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
