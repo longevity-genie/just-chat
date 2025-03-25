@@ -6,9 +6,11 @@ agent_profiles:
     assistant_index: 21 # Determines the agent's position in the selection list. The first agent is set as the default.
     #enforce_agent_prompt: "true"
     llm_options:
+    #  api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.0
-    raise_on_completion_status_errors: "false" #report API errors into chat
+    raise_on_completion_status_errors: False #report API errors into chat
+    enforce_agent_prompt: True
     examples: # Sample user queries for reference.
       - prompt: Why are glucose prediction models important?
         title: Glucose Level Prediction
@@ -75,9 +77,13 @@ agent_profiles:
     class_qualname: just_agents.web.chat_ui_agent.ChatUIAgent
     display_name: 📜 Chat Naming Agent # UI display name.
     description: Generates chat titles based on user queries.
-    hidden: true #hides agent form UI
+    hidden: True #hides agent form UI
     assistant_index: 99 # This agent is positioned last in the selection list.
+    enforce_agent_prompt: False
+    continue_conversation : False
+    remember_query : False
     llm_options:
+      api_base: https://api.groq.com/openai/v1
       model: groq/llama-3.3-70b-versatile
       temperature: 0.7 # Allows more creative name generation.
     examples:

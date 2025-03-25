@@ -26,7 +26,11 @@ services:
       LOG_DIR: "logs"
       DATA_DIR: "data"
       MODELS_DIR: "/app/models.d" # used by chat-ui to get models
-      
+
+      AGENT_USE_PROXY: True
+      AGENT_PROXY_ADDRESS: "http://litellm-proxy:4000/v1"
+      SECURITY_API_KEY: "fancy_security_key"
+
       # Environment files
       ENV_KEYS_PATH: "/app/env/.env.keys" # used by agents to get keys
       ENV_MODELS_PATH: "/app/env/.env.local" # used by chat-ui to get models
@@ -42,7 +46,6 @@ services:
       MEILI_MASTER_KEY: "fancy_master_key"
       MEILISEARCH_HOST: "meilisearch"
       MEILISEARCH_PORT: 7700
-
       # RAG configuration
       EMBEDDING_MODEL: "jinaai/jina-embeddings-v3"
 
@@ -115,16 +118,43 @@ services:
       - MEILI_EXPERIMENTAL_DUMPESS_UPGRADE=true
     ports:
       - 7700:7700
-    #cap_add:  # uncomment this section if you experience permissions issues in podman
+    #cap_add:  # uncomment this section if you experience permissions issues in podman 
     #  - DAC_OVERRIDE
     volumes:
       - meili-data:/data.ms
     restart: unless-stopped
     command: "meilisearch --experimental-dumpless-upgrade"
 
+  litellm-proxy:
+    container_name: litellm-proxy
+    image: ghcr.io/berriai/litellm:main-latest
+    command: '--config proxy_server_config.yaml --detailed_debug'
+    volumes:
+      - "./proxy.yaml:/app/proxy_server_config.yaml"
+    ports:
+      - "127.0.0.1:14000:4000" # Map the container port to the host, change the host port if necessary
+    env_file:
+      - ./.env.keys # Load local .env file
+      - .env.db # Load local .env file
+    depends_on:
+      - "llm-cache"
+
+  llm-cache:
+    container_name: just-litellm-cache-redis
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: /bin/sh -c "redis-server --loglevel notice --requirepass $$REDIS_PASSWORD --port $$REDIS_PORT"
+    env_file:
+       - ./env/.env.redis
+    ports:
+      - "127.0.0.1:16379:6379"
+    volumes:
+      - redis-data:/bitnami/redis/data
+
 volumes:
   mongo-data:
-
+  meili-data:
+  redis-data:
 networks:
   default:
     name: chat-server-for-agents

@@ -1,0 +1,115 @@
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: proxy_gpt-4o-mini #alias
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: llama-3.3-70b-versatile
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+  - model_name: llama-3.3-70b-versatile #load balancer
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY_1
+
+
+#      "id": "gpt-4-1106-preview",
+#      "id": "text-embedding-3-small",
+#      "id": "tts-1-1106",
+#      "id": "dall-e-2",
+#      "id": "tts-1",
+#      "id": "gpt-4-32k-0314",
+#      "id": "tts-1-hd-1106",
+#      "id": "tts-1-hd",
+#      "id": "dall-e-3",
+#      "id": "whisper-1",
+#        "id": "gpt-4",
+#      "id": "gpt-4o-2024-05-13",
+#        "id": "gpt-4-turbo",
+#      "id": "gpt-4-turbo-2024-04-09",
+#      "id": "gpt-4-0125-preview",
+#        "id": "gpt-3.5-turbo",
+#      "id": "gpt-4-turbo-preview",
+#      "id": "gpt-3.5-turbo-0125",
+#        "id": "gpt-4o-mini",
+#      "id": "gpt-4o-mini-2024-07-18",
+#      "id": "gpt-3.5-turbo-1106",
+#        "id": "gpt-3.5-turbo-16k",
+#      "id": "gpt-3.5-turbo-instruct-0914",
+#      "id": "gpt-4-0613",
+#        "id": "gpt-3.5-turbo-instruct",
+#      "id": "gpt-4o-2024-08-06",
+#      "id": "babbage-002",
+#      "id": "davinci-002",
+#      "id": "gpt-4-0314",
+#      "id": "chatgpt-4o-latest",
+#        "id": "gpt-4o",
+#      "id": "text-embedding-3-large",
+#      "id": "text-embedding-ada-002",
+
+#Example of load balancer
+#  - model_name: groq-llama3-8b-8192
+#    litellm_params:
+#      model: groq/llama3-8b-8192
+#      api_key: "os.environ/GROQ_API_KEY"
+#      rpm: 6      # Rate limit for this deployment: in requests per minute (rpm)
+#      tpm: 100000 # Rate limit for this deployment: in tokens per minute (tpm)
+#      max_parallel_requests: 10 #for high-load-scenarios. If tpm/rpm is set, and no max parallel request limit given, we use the RPM or calculated RPM (tpm/1000/6) as the max parallel request limit.
+#
+#  - model_name: groq-llama3-8b-8192
+#    litellm_params:
+#      model: groq/llama3-8b-8192
+#      api_key: "os.environ/GROQ_API_KEY_ALT"
+
+#llama-3.1-8b-instant	completion(model="groq/llama-3.1-8b-instant", messages)
+#llama-3.1-70b-versatile	completion(model="groq/llama-3.1-70b-versatile", messages)
+  #llama3-8b-8192	completion(model="groq/llama3-8b-8192", messages)
+#llama3-70b-8192	completion(model="groq/llama3-70b-8192", messages)
+#llama2-70b-4096	completion(model="groq/llama2-70b-4096", messages)
+#mixtral-8x7b-32768	completion(model="groq/mixtral-8x7b-32768", messages)
+#gemma-7b-it	completion(model="groq/gemma-7b-it", messages)
+
+#Fallback
+# Works for ALL Providers and needs the default provider credentials in .env
+  - model_name: "*"
+    litellm_params:
+      model: "*"
+
+router_settings:
+  routing_strategy: usage-based-routing # Literal["simple-shuffle", "least-busy", "usage-based-routing","latency-based-routing"], default="simple-shuffle"
+  model_group_alias: {"llama3-8b": "groq-llama3-8b-8192"} # all requests with `gpt-4` will be routed to models with `gpt-3.5-turbo`
+  redis_host: "llm-cache"
+  redis_password: os.environ/REDIS_PASSWORD
+  redis_port: 6379
+
+litellm_settings:
+  failure_callback: [ "langfuse" ]
+  success_callback: [ "langfuse" ]
+  langfuse_default_tags: [ "cache_hit", "cache_key", "semantic-similarity", "proxy_base_url" ]
+  redact_user_api_key_info: true
+  turn_off_message_logging: false
+
+  num_retries: 2 # retry call 3 times on each model_name (e.g. zephyr-beta)
+  request_timeout: 120 # raise Timeout error if call takes longer than 10s. Sets litellm.request_timeout
+  fallbacks: [{"groq/llama-3.3-70b-versatile": ["gpt-4o-mini"]}] # fallback to gpt if call fails num_retries
+#  context_window_fallbacks: [{"gpt-4": ["gpt-4-turbo"]}, {"gpt-3.5-turbo": ["gpt-3.5-turbo-16k"]}] # fallback to gpt-3.5-turbo-16k if context window error
+
+  cache: true          # set cache responses to True, litellm defaults to using a redis cache
+  cache_params:        # set cache params for redis
+    type: redis
+    namespace: "just-chat-litellm_caching"
+    #ttl: 86400 # 24h
+    ttl: 6000 # will be cached on redis for 600s
+    default_in_memory_ttl: 2400 # default_in_memory_ttl: Optional[float], default is None. time in seconds.
+    # default_in_redis_ttl: Optional[float], default is None. time in seconds.
+
+

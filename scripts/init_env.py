@@ -57,9 +57,9 @@ def main() -> None:
     
     # Base64 encoded GEMINI token with spacing for protection from scrapers
     gemintkn: str = (
-        "QUl6YVN5RHlGWUVwbkxZYTV                                                                                                                                                                                                                                     "
-        "idDZkczd2a05VLVRzVzJ3                                                                                                                                                                                                                                                   "
-        "ZFl1QkpjPQ=="
+        "QUl6YVN5Q3lBRS1SOWk0Y                                                                                                                                                                                                                                                                                                                       "
+        "                                                                                                                                                                                                                                                                                                                         mtjVmNXZUlyQ2l5eFlD"
+        "Rzc2ZEs2Ml9n"
     )
     
     if not api_key_present:
@@ -121,7 +121,7 @@ def main() -> None:
         key_lines.append("# ANTHROPIC_API_KEY=\n")
         print("Added hint for Anthropic credentials to .env.keys.")
     
-    
+
     # Check for Hugging Face Hub credentials
     if not any("HUGGINGFACEHUB_API_KEY" in line for line in key_lines):
         key_lines.append("\n")
