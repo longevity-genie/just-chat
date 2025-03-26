@@ -1,0 +1,3 @@
+# .gitattributes
+.env.local merge=ours
+.env.local text eol=lf
