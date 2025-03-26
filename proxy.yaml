@@ -16,11 +16,17 @@ model_list:
     litellm_params:
       model: groq/llama-3.3-70b-versatile
       api_key: os.environ/GROQ_API_KEY
-  - model_name: llama-3.3-70b-versatile #load balancer
-    litellm_params:
-      model: groq/llama-3.3-70b-versatile
-      api_key: os.environ/GROQ_API_KEY_1
 
+#  - model_name: llama-3.3-70b-versatile #load balancer example
+#    litellm_params:
+#      tpm: 6000 # Rate limit for this deployment: in tokens per minute (tpm)
+#      model: groq/llama-3.3-70b-versatile
+#      api_key: os.environ/GROQ_API_KEY_1
+#  - model_name: llama-3.3-70b-versatile #load balancer node2
+#    litellm_params:
+#      tpm: 6000 # Rate limit for this deployment: in tokens per minute (tpm)
+#      model: groq/llama-3.3-70b-versatile
+#      api_key: os.environ/GROQ_API_KEY_2
 
 #      "id": "gpt-4-1106-preview",
 #      "id": "text-embedding-3-small",

@@ -1,6 +1,7 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
+#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
     image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
@@ -51,7 +52,7 @@ services:
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
     #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'endpoint' && test -f ./env/.env.local"]
+      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'Swagger' && test -f ./env/.env.local"]
       interval: 15s
       retries: 10
       start_period: 15s
@@ -66,7 +67,8 @@ services:
       - "./agent_tools:/app/agent_tools"
       - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
     restart: on-failure:3
-    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles ./chat_agent_profiles.yaml"
+    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
 
   huggingchat-ui:
     container_name: chat-ui
@@ -123,6 +125,7 @@ services:
     command: "meilisearch --experimental-dumpless-upgrade"
 
 volumes:
+  meili-data:
   mongo-data:
 
 networks:

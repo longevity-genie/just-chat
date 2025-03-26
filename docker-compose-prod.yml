@@ -1,6 +1,7 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
+#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
     image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
@@ -29,7 +30,7 @@ services:
 
       AGENT_USE_PROXY: True
       AGENT_PROXY_ADDRESS: "http://litellm-proxy:4000/v1"
-      SECURITY_API_KEY: "fancy_security_key"
+      SECURITY_API_KEY: "sk-fancy_security_key"
 
       # Environment files
       ENV_KEYS_PATH: "/app/env/.env.keys" # used by agents to get keys
@@ -52,9 +53,8 @@ services:
     ports:
       - "127.0.0.1:8091:8091"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
-    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'endpoint' && test -f ./env/.env.local"]
+      test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'Swagger' && test -f ./env/.env.local"]
       interval: 15s
       retries: 10
       start_period: 15s
@@ -68,8 +68,12 @@ services:
       - "./scripts:/app/scripts"
       - "./agent_tools:/app/agent_tools"
       - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
+    depends_on:
+      litellm-proxy:
+        condition: service_started
     restart: on-failure:3
-    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles ./chat_agent_profiles.yaml"
+    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
 
   huggingchat-ui:
     container_name: chat-ui
@@ -134,11 +138,11 @@ services:
     ports:
       - "127.0.0.1:14000:4000" # Map the container port to the host, change the host port if necessary
     env_file:
-      - ./.env.keys # Load local .env file
-      - .env.db # Load local .env file
+      - ./env/.env.keys # Load local .env file
+      - ./env/.env.redis # Load local .env file
     depends_on:
-      - "llm-cache"
-
+      llm-cache:
+        condition: service_started
   llm-cache:
     container_name: just-litellm-cache-redis
     image: redis:7.4-alpine
@@ -155,6 +159,7 @@ volumes:
   mongo-data:
   meili-data:
   redis-data:
+
 networks:
   default:
     name: chat-server-for-agents
