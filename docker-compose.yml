@@ -59,13 +59,13 @@ services:
       timeout: 1s
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
-      - "./scripts/init_env.py:/app/init.py"
-      - "./data:/app/data"
-      - "./env:/app/env"
-      - "./logs:/app/logs"
-      - "./scripts:/app/scripts"
-      - "./agent_tools:/app/agent_tools"
-      - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
+      - "./scripts/init_env.py:/app/init.py:Z"
+      - "./data:/app/data:z"
+      - "./env:/app/env:z"
+      - "./logs:/app/logs:z"
+      - "./scripts:/app/scripts:z"
+      - "./agent_tools:/app/agent_tools:Z"
+      - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml:Z"
     restart: on-failure:3
     #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
     command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
@@ -77,7 +77,7 @@ services:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
     volumes:
-      - "./env/.env.local:/app/.env.local"
+      - "./env/.env.local:/app/.env.local:z"
     ports:
       - "0.0.0.0:3000:3000"
     depends_on:
@@ -103,10 +103,8 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.13.3  # we have to use it because migration got easier
+    image: docker.io/getmeili/meilisearch:v1.14.0
     environment:
-      - http_proxy
-      - https_proxy
       - MEILI_MASTER_KEY=fancy_master_key
       - MEILI_NO_ANALYTICS=true
       - MEILI_ENV=development
@@ -122,7 +120,7 @@ services:
     volumes:
       - meili-data:/data.ms
     restart: unless-stopped
-    command: "meilisearch --experimental-dumpless-upgrade"
+    command: "meilisearch"
 
 volumes:
   meili-data:
