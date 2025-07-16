@@ -77,7 +77,15 @@ def main() -> None:
         gemini_env: str = code.b64decode(gemintkn.replace(" ", "").replace("\n", "")).decode()
         key_lines.append(f"{gemini_key_name}={gemini_env}\n")
         print("Added missing GEMINI_API_KEY to .env.keys.")
-    
+
+    # Check for Jina credentials
+    if not any("JINA_API_KEY" in line for line in key_lines):
+        key_lines.append("\n")
+        key_lines.append(
+            "# Uncomment and set your Jina API key to enable Jina cloud functionalities (e.g., embeddings):\n")
+        key_lines.append("# JINA_API_KEY=\n")
+        print("Added hint for Jina credentials to .env.keys.")
+
     # Check for Langfuse credentials (even if commented) and append hint if missing
     if not any("LANGFUSE_PUBLIC_KEY" in line or "LANGFUSE_SECRET_KEY" in line for line in key_lines):
         key_lines.append("\n")
@@ -128,6 +136,13 @@ def main() -> None:
         key_lines.append("# Uncomment and set your Hugging Face Hub API key to enable Hugging Face LLM calls:\n")
         key_lines.append("# HUGGINGFACEHUB_API_KEY=\n")
         print("Added hint for Hugging Face Hub credentials to .env.keys.")
+    
+    # Check for Jina credentials
+    if not any("JINA_API_KEY" in line for line in key_lines):
+        key_lines.append("\n")
+        key_lines.append("# Uncomment and set your Jina API key to enable Jina cloud functionalities (e.g., embeddings):\n")
+        key_lines.append("# JINA_API_KEY=\n")
+        print("Added hint for Jina credentials to .env.keys.")
     
     # Append a general hint for additional LLM providers and API keys.
     additional_hint: str = "https://docs.litellm.ai/docs/providers/"

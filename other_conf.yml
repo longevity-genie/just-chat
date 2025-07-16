@@ -1,24 +1,24 @@
 services:
-  just-chat-agents:
-    container_name: just-chat-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:local
-#    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
+  lifespan-chat-agents:
+    container_name: lifespan-chat-agents
+#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
+    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
       APP_HOST: "0.0.0.0" # app host inside container, 0's to expose
       APP_PORT: "8091" # app port inside container
       
       # Agent core configuration
-      AGENT_TITLE: "Chat AGENTS REST API node"
+      AGENT_TITLE: "LifespanIO agents REST API node"
       AGENT_WORKERS: "1"
       AGENT_SECTION: "" # for one agent
       AGENT_PARENT_SECTION: "agent_profiles"
-      AGENT_FAILFAST: "false" # fail fast on startup in case of profile errors or just drop bad profiles
+      AGENT_FAILFAST: "true" # fail fast on startup in case of profile errors or just drop bad profiles
       AGENT_DEBUG: "true"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
       
       # Agent connectivity for chat UI
-      AGENT_HOST: "http://just-chat-agents" # agent host for chat to access
+      AGENT_HOST: "http://lifespan-chat-agents" # agent host for chat to access
       AGENT_PORT: "8091" # agent port for chat to access
       
       # Directory configuration
@@ -41,17 +41,19 @@ services:
 
       # Meilisearch configuration
       MEILI_MASTER_KEY: "fancy_master_key"
-      MEILISEARCH_HOST: "meilisearch"
+      MEILISEARCH_HOST: "lifespan-meilisearch"
       MEILISEARCH_PORT: 7700
-      MEILISEARCH_SEMANTIC_RATIO: 0.5
+      MEILISEARCH_SEMANTIC_RATIO: 0.7
 
       # RAG configuration
       EMBEDDING_MODEL: "jinaai/jina-embeddings-v3"
       INDEX_CHARACTERS_FOR_ABSTRACT: 100000
       INDEX_MAX_SEQ_LENGTH: 36000
+
     ports:
-      - "127.0.0.1:8091:8091"
+      - "0.0.0.0:8092:8091"
     #entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
+    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
     healthcheck:
       test: ["CMD-SHELL", "curl -s 0.0.0.0:8091/docs | grep 'Swagger' && test -f ./env/.env.local"]
       interval: 15s
@@ -60,52 +62,55 @@ services:
       timeout: 1s
     volumes:
     #  - "./scripts/replacement_entrypoint.sh:/usr/local/bin/entrypoint.sh"
-      - "./scripts/init_env.py:/app/init.py:Z"
-      - "./data:/app/data:z"
-      - "./env:/app/env:z"
-      - "./logs:/app/logs:z"
-      - "./scripts:/app/scripts:z"
-      - "./agent_tools:/app/agent_tools:Z"
-      - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml:Z"
+      - "./scripts/init_env.py:/app/init.py"
+      - "./data:/app/data"
+      - "./env:/app/env"
+      - "./logs:/app/logs"
+      - "./scripts:/app/scripts"
+      - "./agent_tools:/app/agent_tools"
+      - "./chat_agent_profiles.yaml:/app/chat_agent_profiles.yaml"
     restart: on-failure:3
-    command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
-    #command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
+    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
 
-  huggingchat-ui:
-    container_name: chat-ui
+  lifespan-huggingchat-ui:
+    container_name: lifespan-chat-ui
     image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-325df57
     environment:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
     volumes:
-      - "./env/.env.local:/app/.env.local:z"
+      - "./env/.env.local:/app/.env.local"
     ports:
-      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:3003:3000"
     depends_on:
-      just-chat-agents:
+      lifespan-chat-agents:
         condition: service_healthy
-      chat-mongo:
+      lifespan-chat-mongo:
         condition: service_started
     restart: unless-stopped
 
-  chat-mongo:
-    container_name: just-chat-mongodb-for-agents
+  lifespan-chat-mongo:
+    container_name: lifespan-chat-mongodb-for-agents
     image: docker.io/library/mongo:latest
     restart: always
     env_file:
       - ./env/.env.mongo
     ports:
-      - "27017"
+      - "27018:27017"
     volumes:
-      - "mongo-data:/data/db"
+      - "lifespan-mongo-data:/data/db"
     #  - "./volumes/mongo/db:/data/db"
     depends_on:
-      just-chat-agents:
+      lifespan-chat-agents:
         condition: service_healthy
 
-  meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.15.2
+  lifespan-meilisearch:
+    container_name: lifespan-meilisearch
+    image: docker.io/getmeili/meilisearch:v1.14.0  # we have to use it because migration got easier
     environment:
+      - http_proxy
+      - https_proxy
       - MEILI_MASTER_KEY=fancy_master_key
       - MEILI_NO_ANALYTICS=true
       - MEILI_ENV=development
@@ -113,24 +118,24 @@ services:
       - MEILI_DB_PATH=/data.ms
       - MEILI_EXPERIMENTAL_ENABLE_METRICS=true
       - MEILI_EXPERIMENTAL_ENABLE_VECTORS=true
-      - MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE=true
-      - MEILI_IGNORE_DUMP_IF_DB_EXISTS=true
-      - MEILI_IGNORE_MISSING_DUMP=true
+#      - MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE=true
       - MEILI_DUMP_DIR=/dumps
     ports:
-      - 7700:7700
+      - 7702:7700
     #cap_add:  # uncomment this section if you experience permissions issues in podman
     #  - DAC_OVERRIDE
     volumes:
-      # Using anonymous volume - use 'USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V' to reset only MeiliSearch DB
-      - /data.ms
-      - "./dumps:/dumps:z"
+      - lifespan-meili-data:/data.ms
+      - "./dump/lifespan_io.2025-03-11.dump:/dumps/lifespan_io.dump"
     restart: unless-stopped
-    command: "meilisearch --import-dump /dumps/just_chat_rag.dump"
+#    command: "meilisearch --import-dump /dumps/lifespan_io.dump"
+#    command: "meilisearch"
+
 
 volumes:
-  mongo-data:
+  lifespan-meili-data:
+  lifespan-mongo-data:
 
 networks:
   default:
-    name: chat-server-for-agents
+    name: lifespan-chat-server-for-agents

@@ -7,6 +7,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+uv.lock
+pyproject.toml
 .Python
 build/
 develop-eggs/

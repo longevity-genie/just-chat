@@ -9,7 +9,7 @@ Make your LLM agent and chat with it simple and fast!
 Just clone repository and run docker-compose!
 ```bash
 git clone git@github.com:longevity-genie/just-chat.git
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up
 ```
 And the chat with your agent is ready to go! Open `http://localhost:3000` in your browser and start chatting with your agent!
 Note: container will be started with the user and group of the host machine to avoid permission issues. If you want to change this, you can modify the `USER_ID` and `GROUP_ID` variables in the `docker-compose.yml` file.
@@ -34,7 +34,7 @@ Also check the [notes](#some-notes) section for further information.
 
 
 ## What can you do with Just-Chat?
-- 🚀 Start chatting with one command ( docker compose up )
+- 🚀 Start chatting with one command ( docker-compose up )
 - 🤖 Customize your AI assistant using a YAML file (can be edited with a text editor)
 - 🛠️ Add new capabilities with Python tools (can add additional functions and libraries)
 - 🌐 Talk with agent with a chat web interface at 0.0.0.0:3000
@@ -54,7 +54,11 @@ podman compose up
 ```
 Unlike Docker, Podman is rootless-by-design and maps user and group id automatically. 
 
-⚠️ **WARNING**: If using Ubuntu 22.04, do not install Podman from apt, as it contains Podman v.3 which is not fully compatible with this setup. You need Podman v4.9.3 or higher. For this reason we provide an installation script for Podman on Ubuntu in the [Installation](#installation) section.
+⚠️ **NOTE**: Ubuntu versions have different Podman availability:
+
+- **Ubuntu 24.04+**: Podman v4.9.3+ available via apt (recommended)
+- **Ubuntu 22.04**: Contains old Podman v.3 in apt, requires manual installation
+- Our installation script handles this automatically for Ubuntu 22.04
 
 The only requirement is Docker (or Podman, both are supported)! We provide detailed installation instructions for both Linux and Windows in the [Installation](#installation) section.
 Also check the [notes](#some-notes) section for further information.
@@ -89,10 +93,11 @@ Refer to the official guides:
  - [Docker Installation Guide](https://docs.docker.com/engine/install/ubuntu/).
  - [Docker Compose Standalone Installation Guide](https://docs.docker.com/compose/install/standalone/).
  
-For Ubuntu users, you can review and use the provided convenience.sh script:
+For Ubuntu 22.04+ users, you can use our automated installation script:
 ```bash
-./scripts/install_docker_ubuntu.sh
+sudo ./scripts/install_docker_ubuntu.sh
 ```
+This script automatically handles Docker installation and Podman v4+ (builds from source on 22.04, installs from apt on 24.04+).
 
 Or follow these manual steps:
 
@@ -151,7 +156,8 @@ If you prefer Podman, you can use the following instructions:
 
 <summary>Podman Installation on Linux</summary>
 
-For Ubuntu users (especially Ubuntu 24.04+):
+### Ubuntu 24.04+ (Recommended - Simple Installation)
+Modern Ubuntu versions have Podman v4.9.3+ in their repositories:
 ```bash
 # Install Podman
 sudo apt-get update
@@ -160,12 +166,20 @@ sudo apt-get install -y podman
 # Install Python3 and pip if not already installed
 sudo apt-get install -y python3 python3-pip
 
-# Install Podman Compose
-pip3 install podman-compose
+# Install Podman Compose (using pipx to avoid PEP 668 issues)
+pipx install podman-compose
 ```
 
-For legacy Ubuntu users (22.04 LTS):
-You will have, sadly, to build podman from source. Due to outdated go-lang version in Ubuntu 22.04 LTS, you will have to add ppa repository and install a newer version of go-lang as a prerequisite and a bunch of libraries:
+### Ubuntu 22.04 LTS (Legacy - Complex Installation)
+
+**Option 1: Use our automated script (RECOMMENDED)**
+```bash
+sudo ./scripts/install_docker_ubuntu.sh
+```
+This automatically installs Docker and builds/installs Podman v4.9.3 from source with all dependencies.
+
+**Option 2: Manual installation**
+You will have to build Podman from source due to outdated go-lang version in Ubuntu 22.04 LTS. You'll need to add a PPA repository and install newer go-lang plus dependencies:
 
 ```bash
 sudo add-apt-repository ppa:longsleep/golang-backports
@@ -220,9 +234,9 @@ git clone https://github.com/winternewt/just-chat.git
 
 ## Start the application
 ```bash
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up
 ```
-Note: Here we use USER_ID=$(id -u) GROUP_ID=$(id -g) to run as current user instead of root, but if it does not matter for you can simply run docker compose up
+Note: Here we use USER_ID=$(id -u) GROUP_ID=$(id -g) to run as current user instead of root, but if it does not matter for you can simply run docker-compose up
 We also provide experimental start and stop bash (for Linux) and bat (for Windows) scripts.
 
 ## Using Semantic Search with MeiliSearch
@@ -241,7 +255,42 @@ Note: the container has everything that you copy to ./data folder as /app/data/
 
 This feature allows your agent to search and reference specific knowledge bases during conversations.
 
+### MeiliSearch Dumps - Import & Export
 
+Just-Chat includes a convenient tool for creating and importing MeiliSearch dumps, allowing you to backup and restore your search indexes.
+
+#### Creating a Dump
+
+Use the provided dump script to create a backup of your MeiliSearch data:
+
+```bash
+# Create a dump (saved to ./dumps/ folder)
+python3 scripts/meilisearch_dump.py
+
+# With custom settings
+python3 scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_key
+```
+
+#### Importing a Dump
+
+To import a MeiliSearch dump:
+
+1. **Place your dump file** at `dumps/just_chat_rag.dump`
+2. **Reset and restart** the MeiliSearch container to force import:
+
+```bash
+# For Docker:
+docker-compose down
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up -V
+
+# For Podman:
+podman compose down
+podman compose up -V
+```
+
+The `-V` flag recreates anonymous volumes, forcing MeiliSearch to start fresh and automatically import the dump file on startup.
+
+**Note**: This process only resets MeiliSearch data (anonymous volume) while preserving MongoDB chat history (named volume).
 
 ## Some notes
 0. Be sure to use ```docker pull``` (or podman pull if you use Podman) from time to time since the containers do not always automatically update when image was called with `:latest`
@@ -263,17 +312,17 @@ This feature allows your agent to search and reference specific knowledge bases 
    - Stop conflicting containers: 
      ```bash
      cd /path/to/container/directory
-     docker compose down
+     docker-compose down
      ```
-   Note: Depending on your system and installation, you might need to use `docker-compose` (with dash) 
-   instead of `docker compose` (without dash).
+   Note: Depending on your system and installation, you might need to use `docker compose` (without dash) 
+   instead of `docker-compose` (with dash).
 
 5. Best practices for container management:
    - Always stop containers when done using either:
-     - `docker compose down` (or `docker-compose down`)
-     - `Ctrl+C` followed by `docker compose down`
+     - `docker-compose down` (or `docker compose down`)
+     - `Ctrl+C` followed by `docker-compose down`
    - To run in background mode, use:
-     - `docker compose up -d`
+     - `docker-compose up -d`
    - This prevents port conflicts in future sessions
  
  6. for editing the model used in chat_agent_profiles.yaml , the types are found [here](https://github.com/longevity-genie/just-agents/blob/main/core/just_agents/llm_options.py)
@@ -300,10 +349,10 @@ For autoannotation free GROQ key may no be enough because of rate limits. Please
 ### Logging and Observability
 - By default, the application logs to the console and to timestamped files in the `/logs` directory.
 - In case you run the application in background mode, you can still access and review the console logs by running:
-`docker compose logs -f just-chat-ui-agents`.
+`docker-compose logs -f just-chat-ui-agents`.
 - **Langfuse**: Uncomment and fill in your credentials in `env/.env.keys` to enable additional observability for LLM calls.
 - Note: Langfuse is not enabled by default.
-- NB! `docker compose down` will flush the container logs, but application logs will still be available in the `/logs` directory unless you delete them manually.
+- NB! `docker-compose down` will flush the container logs, but application logs will still be available in the `/logs` directory unless you delete them manually.
 
 ### How to Update the API Keys
 
@@ -316,11 +365,33 @@ For autoannotation free GROQ key may no be enough because of rate limits. Please
 3. **Restart the Application:**  
    After updating the API keys, restart your Docker containers to apply the new settings, you may need to stop and start the containers to ensure the new keys are loaded:
    ```bash
-   docker compose down
-   docker compose up
+   docker-compose down
+   docker-compose up
    ```
 
 Happy chatting!
+
+## Advanced Development
+
+While just-chat is designed for no-code use through YAML configuration files and simple Python tools, developers can extend it with advanced agentic flows and custom implementations:
+
+### Development Environment Setup
+
+For those who want to contribute to the codebase or develop advanced custom agents:
+
+1. **DevContainer Support**: The project includes a pre-configured development container in `.devcontainer/devcontainer.json`
+2. **IDE Integration**: Open the project in VS Code and it will automatically detect the devcontainer configuration
+3. **Development Tools**: The devcontainer comes with Python, Docker tools, and all necessary extensions pre-installed
+
+### Advanced Customization Options
+
+- **Custom Agent Workflows**: Develop sophisticated multi-agent systems beyond simple tool calling
+- **Advanced Tool Development**: Create complex tools with custom dependencies and integrations
+- **API Extensions**: Extend the REST API for custom functionality
+- **Database Integration**: Work directly with MongoDB for advanced data operations
+- **Custom UI Components**: Modify the chat interface for specialized use cases
+
+The devcontainer provides a complete development environment where you can modify core functionality while maintaining the containerized approach that makes just-chat easy to deploy and distribute.
 
 ## Acknowledgments
 

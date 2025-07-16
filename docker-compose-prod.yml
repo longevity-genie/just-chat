@@ -1,8 +1,8 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
-#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
-    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
+    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:local
+#    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
       APP_HOST: "0.0.0.0" # app host inside container, 0's to expose
@@ -13,7 +13,7 @@ services:
       AGENT_WORKERS: "1"
       AGENT_SECTION: "" # for one agent
       AGENT_PARENT_SECTION: "agent_profiles"
-      AGENT_FAILFAST: "true" # fail fast on startup in case of profile errors or just drop bad profiles
+      AGENT_FAILFAST: "false" # fail fast on startup in case of profile errors or just drop bad profiles
       AGENT_DEBUG: "true"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
       
@@ -47,8 +47,10 @@ services:
       MEILI_MASTER_KEY: "fancy_master_key"
       MEILISEARCH_HOST: "meilisearch"
       MEILISEARCH_PORT: 7700
+      MEILISEARCH_SEMANTIC_RATIO: 0.7
       # RAG configuration
       EMBEDDING_MODEL: "jinaai/jina-embeddings-v3"
+      
 
     ports:
       - "127.0.0.1:8091:8091"
@@ -72,8 +74,8 @@ services:
       litellm-proxy:
         condition: service_started
     restart: on-failure:3
-    #command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
-    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
+    command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+#    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
 
   huggingchat-ui:
     container_name: chat-ui
