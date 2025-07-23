@@ -80,7 +80,7 @@ services:
 
   huggingchat-ui:
     container_name: chat-ui
-    image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-325df57
+    image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-6b47a62
     environment:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
@@ -111,7 +111,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.13.3  # we have to use it because migration got easier
+    image: docker.io/getmeili/meilisearch:v1.15.2  # we have to use it because migration got easier
     environment:
       - http_proxy
       - https_proxy
