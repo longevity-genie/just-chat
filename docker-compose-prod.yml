@@ -1,7 +1,7 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:local
+    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
 #    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
@@ -50,7 +50,8 @@ services:
       MEILISEARCH_SEMANTIC_RATIO: 0.7
       # RAG configuration
       EMBEDDING_MODEL: "jinaai/jina-embeddings-v3"
-      
+      INDEX_CHARACTERS_FOR_ABSTRACT: 100000
+      INDEX_MAX_SEQ_LENGTH: 36000
 
     ports:
       - "127.0.0.1:8091:8091"

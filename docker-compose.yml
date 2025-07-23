@@ -1,7 +1,7 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:local
+    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
 #    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
