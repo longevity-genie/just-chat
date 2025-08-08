@@ -1,8 +1,8 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
-#    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
+#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
+    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
       APP_HOST: "0.0.0.0" # app host inside container, 0's to expose
@@ -13,7 +13,7 @@ services:
       AGENT_WORKERS: "1"
       AGENT_SECTION: "" # for one agent
       AGENT_PARENT_SECTION: "agent_profiles"
-      AGENT_FAILFAST: "false" # fail fast on startup in case of profile errors or just drop bad profiles
+      AGENT_FAILFAST: "true" # fail fast on startup in case of profile errors or just drop bad profiles
       AGENT_DEBUG: "true"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
       
@@ -80,7 +80,8 @@ services:
 
   huggingchat-ui:
     container_name: chat-ui
-    image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-6b47a62
+    image: ghcr.io/longevity-genie/chat-ui/chat-ui:latest
+  #  image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-6b47a62
     environment:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
@@ -111,7 +112,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.15.2  # we have to use it because migration got easier
+    image: docker.io/getmeili/meilisearch:v1.16.0  # we have to use it because migration got easier
     environment:
       - http_proxy
       - https_proxy

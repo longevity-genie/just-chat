@@ -1,8 +1,8 @@
 services:
   just-chat-agents:
     container_name: just-chat-agents
-    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
-#    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
+#    image: ghcr.io/longevity-genie/just-agents/chat-ui-agents:main
+    image: ghcr.io/longevity-genie/just-semantic-search/rag-server:main
     environment:
       # Web server configuration
       APP_HOST: "0.0.0.0" # app host inside container, 0's to expose
@@ -13,7 +13,7 @@ services:
       AGENT_WORKERS: "1"
       AGENT_SECTION: "" # for one agent
       AGENT_PARENT_SECTION: "agent_profiles"
-      AGENT_FAILFAST: "false" # fail fast on startup in case of profile errors or just drop bad profiles
+      AGENT_FAILFAST: "true" # fail fast on startup in case of profile errors or just drop bad profiles
       AGENT_DEBUG: "true"
       AGENT_CONFIG_PATH: "/app/chat_agent_profiles.yaml"
       
@@ -73,7 +73,8 @@ services:
 
   huggingchat-ui:
     container_name: chat-ui
-    image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-6b47a62
+    image: ghcr.io/longevity-genie/chat-ui/chat-ui:latest
+  #  image: ghcr.io/longevity-genie/chat-ui/chat-ui:sha-6b47a62
     environment:
       ALLOW_INSECURE_COOKIES: "true"
       INCLUDE_DB: "False"
@@ -104,7 +105,8 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.15.2
+    image: docker.io/getmeili/meilisearch:v1.16.0
+    
     environment:
       - MEILI_MASTER_KEY=fancy_master_key
       - MEILI_NO_ANALYTICS=true
@@ -117,6 +119,9 @@ services:
       - MEILI_IGNORE_DUMP_IF_DB_EXISTS=true
       - MEILI_IGNORE_MISSING_DUMP=true
       - MEILI_DUMP_DIR=/dumps
+      # User/group configuration
+      - USER_ID=${USER_ID:-${UID}}
+      - GROUP_ID=${GROUP_ID:-${GID}}
     ports:
       - 7700:7700
     #cap_add:  # uncomment this section if you experience permissions issues in podman

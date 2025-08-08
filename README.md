@@ -257,7 +257,7 @@ This feature allows your agent to search and reference specific knowledge bases 
 
 ### MeiliSearch Dumps - Import & Export
 
-Just-Chat includes a convenient tool for creating and importing MeiliSearch dumps, allowing you to backup and restore your search indexes.
+Just-Chat includes a convenient tool for creating and importing MeiliSearch dumps, allowing you to backup and restore your search indexes. Due to MeiliSearch limitations, this is the primary way to synchronize search data between environments.
 
 #### Creating a Dump
 
@@ -271,9 +271,143 @@ python3 scripts/meilisearch_dump.py
 python3 scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_key
 ```
 
-#### Importing a Dump
+#### Common Use Case Scenarios
 
-To import a MeiliSearch dump:
+##### Scenario A: Development to Production Workflow
+
+**Step-by-step process for moving updated indices from development to production:**
+
+1. **On Development Environment:**
+   ```bash
+   # After updating your indices with new data/documents
+   # Create a dump of your current indices
+   python3 scripts/meilisearch_dump.py
+   
+   # The script creates dumps with datetime format (e.g., 20250714-212239660.dump)
+   # Check ./dumps/ folder for the latest dump file
+   ls -la ./dumps/
+   
+   # Rename the latest dump to the expected import name
+   # Find the most recent dump and rename it
+   LATEST_DUMP=$(ls -t ./dumps/*.dump | head -n1 | xargs basename)
+   cp ./dumps/$LATEST_DUMP ./dumps/just_chat_rag.dump
+   
+   # Or manually if you prefer:
+   # cp ./dumps/20250714-212239660.dump ./dumps/just_chat_rag.dump
+   ```
+
+2. **Transfer Dump to Production:**
+   ```bash
+   # Copy dump file to production environment
+   scp ./dumps/just_chat_rag.dump user@production-host:/path/to/just-chat/dumps/
+   
+   # Or using rsync for better transfer control:
+   rsync -avz ./dumps/just_chat_rag.dump user@production-host:/path/to/just-chat/dumps/
+   
+   # For local environments, you might simply copy to a shared location:
+   cp ./dumps/just_chat_rag.dump /shared/path/to/production/dumps/
+   ```
+
+3. **On Production Environment:**
+   ```bash
+   # Navigate to your just-chat directory
+   cd /path/to/just-chat
+   
+   # Verify the dump file is present and properly named
+   # MeiliSearch expects the dump file to be named exactly 'just_chat_rag.dump'
+   ls -la ./dumps/just_chat_rag.dump
+   
+   # Stop the current services
+   docker compose down
+   
+   # Start with volume recreation (-V flag) to force import
+   USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V
+   ```
+
+**Important Notes for Scenario A:**
+- **Critical**: The dump script creates files with datetime format (e.g., `20250714-212239660.dump`), but MeiliSearch import expects `just_chat_rag.dump` - you must rename!
+- The `-V` flag recreates anonymous volumes (MeiliSearch data) while preserving named volumes (MongoDB chat history)
+- The import happens automatically when MeiliSearch starts with a fresh volume and finds the correctly named dump file
+
+##### Scenario B: Handling Conflicts and Data Synchronization
+
+**🆕 NEW: Automatic Conflict Resolution with Export (Meilisearch 1.16+)**
+
+Starting with Meilisearch 1.16, the new **export feature** provides intelligent conflict resolution and additive data synchronization between instances. This solves the previous limitation where dumps required complete data replacement.
+
+**✅ Recommended: Use Export for Conflict Resolution (Meilisearch 1.16+)**
+```bash
+# Direct instance-to-instance migration with automatic conflict resolution
+uv run scripts/meilisearch_dump.py --export \
+  --host localhost --port 7702 --api-key "source_key" \
+  --target-url "http://production.example.com:7700" \
+  --target-api-key "target_key"
+
+# The export automatically:
+# - Preserves existing documents in target
+# - Adds new documents from source
+# - Replaces duplicates (same document ID) with source version
+# - Maintains all index settings and configurations
+
+# For Docker container-to-host exports, use host gateway IP:
+uv run scripts/meilisearch_dump.py --export \
+  --host localhost --port 7702 --api-key "fancy_master_key" \
+  --target-url "http://172.17.0.1:7700" \
+  --target-api-key "fancy_master_key"
+```
+
+**Requirements for Export Feature:**
+- Both source and target instances must be **Meilisearch 1.16.0 or higher**
+- Update your instances: `docker compose pull && docker compose up -d`
+- Verify versions: `curl "http://localhost:7700/version"`
+
+**Legacy Approaches (for older Meilisearch versions < 1.16):**
+
+When using traditional dumps, conflict resolution is **not** automatic. You must choose one of these strategies:
+
+**Option 1: Replace Production Data (Most Common)**
+```bash
+# This completely replaces production search data with development data
+# Follow Scenario A steps above - this overwrites all production indices
+```
+
+**Option 2: Replace Development Data with Production**
+```bash
+# 1. On Production: Create a dump
+python3 scripts/meilisearch_dump.py
+
+# 2. Transfer dump to Development
+scp user@production-host:/path/to/just-chat/dumps/just_chat_rag.dump ./dumps/
+
+# 3. On Development: Import production data
+docker compose down
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V
+```
+
+**Option 3: Manual Reindexing (When you need to merge changes)**
+If you need to combine data from both environments, you must:
+1. Choose one environment as the base (usually production)
+2. Manually re-index the additional documents from the other environment
+3. Use the API endpoints (`localhost:9000/docs`) to add the missing documents
+4. Create a new dump with the combined data
+
+**Best Practices for Data Synchronization:**
+
+**With Export Feature (Meilisearch 1.16+):**
+- Use export for seamless data synchronization between environments
+- Export regularly from development to staging/production for incremental updates
+- The additive nature means you can safely sync without losing existing data
+- Use selective export with `--index-patterns` for specific index synchronization
+
+**For Legacy Setups:**
+- Establish a single source of truth for your search data
+- Use version control for your source documents
+- Document which environment contains the "master" version of your indices
+- Consider creating dated backup dumps before major updates
+
+#### Manual Import Process
+
+If you need to manually import a dump:
 
 1. **Place your dump file** at `dumps/just_chat_rag.dump`
 2. **Reset and restart** the MeiliSearch container to force import:
@@ -288,7 +422,15 @@ podman compose down
 podman compose up -V
 ```
 
-The `-V` flag recreates anonymous volumes, forcing MeiliSearch to start fresh and automatically import the dump file on startup.
+#### Troubleshooting Tips
+
+- **Dump not importing?** 
+  - Ensure the file is named exactly `just_chat_rag.dump`
+  - Remember: dump script creates `YYYYMMDD-HHMMSS.dump` but import needs `just_chat_rag.dump`
+- **Old data still present?** Make sure you used the `-V` flag to recreate volumes
+- **Large dumps taking time?** MeiliSearch import happens during startup - wait for the container to fully initialize
+- **Import failed?** Check container logs: `docker compose logs -f meilisearch`
+- **Wrong dump file?** Use `ls -t ./dumps/*.dump | head -n1` to find the most recent dump
 
 **Note**: This process only resets MeiliSearch data (anonymous volume) while preserving MongoDB chat history (named volume).
 
