@@ -25,13 +25,18 @@ NEW EXPORT FEATURES:
 - Selective export with index patterns and filters
 - Settings override capabilities
 - Configurable payload sizes for performance
+- Automatic backup creation before/after export for data safety
+- Import dump management with backup of existing files
 
 Usage:
-  # Export mode (recommended for 1.16+)
+  # Export mode with auto-backup (recommended for 1.16+)
   uv run scripts/meilisearch_dump.py --export --target-url http://target:7700 --target-api-key key
   
-  # Traditional dump mode
-  uv run scripts/meilisearch_dump.py
+  # Export with import dump update and no backup
+  uv run scripts/meilisearch_dump.py --export --target-url http://target:7700 --target-api-key key --update-import --no-backup
+  
+  # Traditional dump mode with import update
+  uv run scripts/meilisearch_dump.py --update-import
 """
 
 from meilisearch import Client
@@ -39,6 +44,7 @@ from meilisearch.errors import MeilisearchApiError
 from meilisearch.models.task import TaskInfo
 import time
 import os
+import shutil
 import typer
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -190,6 +196,60 @@ def wait_for_export(client: Client, task: TaskInfo, timeout_seconds: int = 600) 
         print(f"Error waiting for export: {e}")
         return None
 
+def create_backup_dump(client: Client, dumps_path: str, label: str = "BACKUP") -> Optional[str]:
+    """Create a backup dump and return the filename."""
+    print(f"\n🔄 Creating {label} dump for data safety...")
+    
+    # Record start time for new dump detection
+    start_time = time.time()
+    
+    task = initiate_dump(client)
+    if task is None:
+        print(f"❌ Failed to create {label} dump")
+        return None
+    
+    # Wait for dump to complete
+    completed_task = wait_for_dump(client, task, timeout_seconds=300)
+    if completed_task is None or completed_task.status != "succeeded":
+        print(f"❌ {label} dump failed")
+        return None
+    
+    # Find the new dump file
+    new_dump = find_new_dump(dumps_path, start_time)
+    if new_dump:
+        file_path = os.path.join(dumps_path, new_dump)
+        size = os.path.getsize(file_path)
+        print(f"✅ {label} dump created: {new_dump} ({size} bytes)")
+        return new_dump
+    else:
+        print(f"⚠️ {label} dump created but file not found in monitoring")
+        return None
+
+def update_import_dump(dumps_path: str, latest_dump: str) -> bool:
+    """Copy latest dump to just_chat_rag.dump with backup of existing."""
+    import_dump_path = os.path.join(dumps_path, "just_chat_rag.dump")
+    latest_dump_path = os.path.join(dumps_path, latest_dump)
+    
+    if not os.path.exists(latest_dump_path):
+        print(f"❌ Latest dump not found: {latest_dump_path}")
+        return False
+    
+    # Backup existing import dump if it exists
+    if os.path.exists(import_dump_path):
+        backup_path = f"{import_dump_path}.bak"
+        if os.path.exists(backup_path):
+            os.remove(backup_path)  # Remove old backup
+        
+        os.rename(import_dump_path, backup_path)
+        print(f"📦 Backed up existing import dump to: just_chat_rag.dump.bak")
+    
+    # Copy latest dump to import location
+    shutil.copy2(latest_dump_path, import_dump_path)
+    print(f"✅ Updated import dump: just_chat_rag.dump")
+    print(f"   Source: {latest_dump}")
+    
+    return True
+
 def main(
     host: Optional[str] = typer.Option(
         None, 
@@ -256,6 +316,17 @@ def main(
         None,
         "--filter",
         help="Filter expression for selective document export"
+    ),
+    # Backup and import management options
+    no_backup: bool = typer.Option(
+        False,
+        "--no-backup",
+        help="Disable automatic backup creation before/after export operations"
+    ),
+    update_import: bool = typer.Option(
+        False,
+        "--update-import",
+        help="Copy latest dump to just_chat_rag.dump for import (backs up existing)"
     )
 ) -> None:
     """Create a MeiliSearch dump or export data to another instance."""
@@ -294,6 +365,14 @@ def main(
         print(f"Mode: EXPORT to {target_url}")
         print(f"Target API key: {'*' * (len(target_api_key) - 4)}{target_api_key[-4:] if len(target_api_key) > 4 else '****'}")
         print(f"Payload size: {payload_size}")
+        print(f"Auto-backup: {'disabled' if no_backup else 'enabled'}")
+        
+        # Create backup before export (unless disabled)
+        pre_export_dump = None
+        if not no_backup:
+            pre_export_dump = create_backup_dump(client, actual_dump_path, "PRE-EXPORT")
+            if pre_export_dump is None:
+                print("⚠️ Warning: Pre-export backup failed, but continuing with export...")
         
         # Prepare indexes configuration if patterns are provided
         indexes_config = None
@@ -340,6 +419,23 @@ def main(
             print(f"Export completed successfully in {export_duration:.2f} seconds!")
             print(f"Data has been migrated to {target_url}")
             
+            # Create backup after export (unless disabled)
+            post_export_dump = None
+            if not no_backup:
+                post_export_dump = create_backup_dump(client, actual_dump_path, "POST-EXPORT")
+                if post_export_dump is None:
+                    print("⚠️ Warning: Post-export backup failed")
+            
+            # Update import dump if requested
+            latest_dump_for_import = post_export_dump or pre_export_dump
+            if update_import and latest_dump_for_import:
+                print(f"\n📁 Updating import dump...")
+                update_success = update_import_dump(actual_dump_path, latest_dump_for_import)
+                if not update_success:
+                    print("⚠️ Warning: Failed to update import dump")
+            elif update_import:
+                print("⚠️ Warning: --update-import requested but no dump available")
+            
             # Calculate and display total process time
             process_end_time = time.time()
             total_duration = process_end_time - process_start_time
@@ -352,6 +448,10 @@ def main(
             print("   Data has been migrated between instances.")
             print("   The operation was additive - existing data was preserved.")
             print("   Duplicate documents were replaced with new data.")
+            if not no_backup:
+                print("   🔒 Automatic backups created for data safety.")
+            if update_import and latest_dump_for_import:
+                print("   📁 Import dump updated and ready for use.")
             print("="*60)
         else:
             print(f"Export failed with status: {completed_task.status}")
@@ -408,6 +508,15 @@ def main(
             # Show final status
             print_dumps_status(actual_dump_path, "AFTER SUCCESSFUL DUMP")
             
+            # Update import dump if requested
+            if update_import and new_dump:
+                print(f"\n📁 Updating import dump...")
+                update_success = update_import_dump(actual_dump_path, new_dump)
+                if not update_success:
+                    print("⚠️ Warning: Failed to update import dump")
+            elif update_import:
+                print("⚠️ Warning: --update-import requested but no dump was created")
+            
             # Calculate and display total process time
             process_end_time = time.time()
             total_duration = process_end_time - process_start_time
@@ -417,7 +526,14 @@ def main(
             
             # Show reset tip after successful dump
             print("\n" + "="*60)
-            print("💡 TIP: To force re-import of this dump:")
+            if update_import and new_dump:
+                print("✅ DUMP COMPLETED AND IMPORT READY!")
+                print("   📁 Import dump updated: just_chat_rag.dump")
+                print("   🔄 Ready for immediate import with:")
+            else:
+                print("💡 TIP: To force re-import of this dump:")
+                if new_dump:
+                    print(f"   📁 First copy: cp ./dumps/{new_dump} ./dumps/just_chat_rag.dump")
             print("   # For Docker:")
             print("   docker compose down")
             print("   USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V")

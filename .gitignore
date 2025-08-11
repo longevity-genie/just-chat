@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 dumps/*.dump
+dumps/*
 uv.lock
 pyproject.toml
 .Python

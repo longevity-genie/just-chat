@@ -75,8 +75,8 @@ services:
       litellm-proxy:
         condition: service_started
     restart: on-failure:3
-    command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
-#    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
+    # command: ["python", "-m", "just_agents.web.run_agent", "run-chat-ui-server-command"]
+    command: "python -m just_semantic_search.server.run_rag_server --workers 1 --agent-profiles /app/chat_agent_profiles.yaml"
 
   huggingchat-ui:
     container_name: chat-ui

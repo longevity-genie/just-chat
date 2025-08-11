@@ -264,11 +264,14 @@ Just-Chat includes a convenient tool for creating and importing MeiliSearch dump
 Use the provided dump script to create a backup of your MeiliSearch data:
 
 ```bash
-# Create a dump (saved to ./dumps/ folder)
-python3 scripts/meilisearch_dump.py
+# Create a dump with automatic import readiness (recommended)
+uv run scripts/meilisearch_dump.py --update-import
 
-# With custom settings
-python3 scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_key
+# Basic dump creation (saved to ./dumps/ folder)
+uv run scripts/meilisearch_dump.py
+
+# With custom settings and import update
+uv run scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_key --update-import
 ```
 
 #### Common Use Case Scenarios
@@ -280,20 +283,21 @@ python3 scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_
 1. **On Development Environment:**
    ```bash
    # After updating your indices with new data/documents
-   # Create a dump of your current indices
-   python3 scripts/meilisearch_dump.py
+   # Create a dump with automatic import preparation (RECOMMENDED)
+   uv run scripts/meilisearch_dump.py --update-import
    
-   # The script creates dumps with datetime format (e.g., 20250714-212239660.dump)
-   # Check ./dumps/ folder for the latest dump file
-   ls -la ./dumps/
+   # The script automatically:
+   # - Creates a timestamped dump (e.g., 20250811-171207402.dump)
+   # - Backs up existing just_chat_rag.dump to just_chat_rag.dump.bak
+   # - Copies new dump to just_chat_rag.dump for import
    
-   # Rename the latest dump to the expected import name
-   # Find the most recent dump and rename it
-   LATEST_DUMP=$(ls -t ./dumps/*.dump | head -n1 | xargs basename)
-   cp ./dumps/$LATEST_DUMP ./dumps/just_chat_rag.dump
+   # Verify the import dump is ready
+   ls -la ./dumps/just_chat_rag.dump
    
-   # Or manually if you prefer:
-   # cp ./dumps/20250714-212239660.dump ./dumps/just_chat_rag.dump
+   # Legacy manual approach (if needed):
+   # uv run scripts/meilisearch_dump.py
+   # LATEST_DUMP=$(ls -t ./dumps/*.dump | head -n1 | xargs basename)
+   # cp ./dumps/$LATEST_DUMP ./dumps/just_chat_rag.dump
    ```
 
 2. **Transfer Dump to Production:**
@@ -325,9 +329,11 @@ python3 scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_
    ```
 
 **Important Notes for Scenario A:**
-- **Critical**: The dump script creates files with datetime format (e.g., `20250714-212239660.dump`), but MeiliSearch import expects `just_chat_rag.dump` - you must rename!
-- The `-V` flag recreates anonymous volumes (MeiliSearch data) while preserving named volumes (MongoDB chat history)
-- The import happens automatically when MeiliSearch starts with a fresh volume and finds the correctly named dump file
+- **🎯 RECOMMENDED**: Use `--update-import` flag to automatically handle file naming and backup
+- **🛡️ Data Safety**: Existing `just_chat_rag.dump` is automatically backed up to `.bak` before replacement
+- **⚠️ Legacy Manual**: Without `--update-import`, you must manually rename datetime dumps to `just_chat_rag.dump`
+- **🔄 Volume Management**: The `-V` flag recreates anonymous volumes (MeiliSearch data) while preserving named volumes (MongoDB chat history)
+- **🚀 Auto-Import**: Import happens automatically when MeiliSearch starts with fresh volume and finds correctly named dump file
 
 ##### Scenario B: Handling Conflicts and Data Synchronization
 
@@ -341,25 +347,43 @@ Starting with Meilisearch 1.16, the new **export feature** provides intelligent 
 uv run scripts/meilisearch_dump.py --export \
   --host localhost --port 7702 --api-key "source_key" \
   --target-url "http://production.example.com:7700" \
-  --target-api-key "target_key"
+  --target-api-key "target_key" \
+  --update-import
 
 # The export automatically:
+# - Creates PRE-EXPORT backup for data safety
 # - Preserves existing documents in target
 # - Adds new documents from source
 # - Replaces duplicates (same document ID) with source version
 # - Maintains all index settings and configurations
+# - Creates POST-EXPORT backup with final state
+# - Updates local just_chat_rag.dump for immediate import readiness (with --update-import)
 
 # For Docker container-to-host exports, use host gateway IP:
 uv run scripts/meilisearch_dump.py --export \
   --host localhost --port 7702 --api-key "fancy_master_key" \
   --target-url "http://172.17.0.1:7700" \
-  --target-api-key "fancy_master_key"
+  --target-api-key "fancy_master_key" \
+  --update-import
+
+# For faster export without safety backups (not recommended for production):
+uv run scripts/meilisearch_dump.py --export \
+  --host localhost --port 7702 --api-key "source_key" \
+  --target-url "http://target.example.com:7700" \
+  --target-api-key "target_key" \
+  --no-backup
 ```
 
 **Requirements for Export Feature:**
 - Both source and target instances must be **Meilisearch 1.16.0 or higher**
 - Update your instances: `docker compose pull && docker compose up -d`
 - Verify versions: `curl "http://localhost:7700/version"`
+
+**🔒 Data Safety Features:**
+- **Auto-backup enabled by default** - PRE-EXPORT and POST-EXPORT dumps created automatically
+- **Import management** - `--update-import` flag copies dump to `just_chat_rag.dump` with backup
+- **No data loss risk** - Multiple safety mechanisms prevent accidental data loss during migrations
+- **Disable backups** - Use `--no-backup` flag for faster operation (not recommended for production)
 
 **Legacy Approaches (for older Meilisearch versions < 1.16):**
 
@@ -373,8 +397,8 @@ When using traditional dumps, conflict resolution is **not** automatic. You must
 
 **Option 2: Replace Development Data with Production**
 ```bash
-# 1. On Production: Create a dump
-python3 scripts/meilisearch_dump.py
+# 1. On Production: Create a dump with import readiness
+uv run scripts/meilisearch_dump.py --update-import
 
 # 2. Transfer dump to Development
 scp user@production-host:/path/to/just-chat/dumps/just_chat_rag.dump ./dumps/
