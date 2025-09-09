@@ -105,7 +105,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.16.0
+    image: docker.io/getmeili/meilisearch:v1.20.0
     
     environment:
       - MEILI_MASTER_KEY=fancy_master_key
@@ -128,13 +128,14 @@ services:
     #  - DAC_OVERRIDE
     volumes:
       # Using anonymous volume - use 'USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V' to reset only MeiliSearch DB
-      - /data.ms
+      - meili-data:/data.ms
       - "./dumps:/dumps:z"
     restart: unless-stopped
     command: "meilisearch --import-dump /dumps/just_chat_rag.dump"
 
 volumes:
   mongo-data:
+  meili-data:
 
 networks:
   default:

@@ -324,15 +324,19 @@ uv run scripts/meilisearch_dump.py --host localhost --port 7700 --api-key your_k
    # Stop the current services
    docker compose down
    
-   # Start with volume recreation (-V flag) to force import
-   USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V
+   # Remove the MeiliSearch data volume to force fresh import
+   docker volume rm just-chat_meili-data
+   
+   # Start services - MeiliSearch will import the dump on fresh startup
+   USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
    ```
 
 **Important Notes for Scenario A:**
 - **🎯 RECOMMENDED**: Use `--update-import` flag to automatically handle file naming and backup
 - **🛡️ Data Safety**: Existing `just_chat_rag.dump` is automatically backed up to `.bak` before replacement
 - **⚠️ Legacy Manual**: Without `--update-import`, you must manually rename datetime dumps to `just_chat_rag.dump`
-- **🔄 Volume Management**: The `-V` flag recreates anonymous volumes (MeiliSearch data) while preserving named volumes (MongoDB chat history)
+- **🗂️ Named Volumes**: MeiliSearch now uses named volume (`meili-data`) for data persistence and safety
+- **🔄 Volume Management**: Must explicitly remove `just-chat_meili-data` volume to force fresh import
 - **🚀 Auto-Import**: Import happens automatically when MeiliSearch starts with fresh volume and finds correctly named dump file
 
 ##### Scenario B: Handling Conflicts and Data Synchronization
@@ -405,7 +409,8 @@ scp user@production-host:/path/to/just-chat/dumps/just_chat_rag.dump ./dumps/
 
 # 3. On Development: Import production data
 docker compose down
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -V
+docker volume rm just-chat_meili-data
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 ```
 
 **Option 3: Manual Reindexing (When you need to merge changes)**
@@ -438,12 +443,14 @@ If you need to manually import a dump:
 
 ```bash
 # For Docker:
-docker-compose down
-USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up -V
+docker compose down
+docker volume rm just-chat_meili-data
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up
 
 # For Podman:
 podman compose down
-podman compose up -V
+podman volume rm just-chat_meili-data
+podman compose up
 ```
 
 #### Troubleshooting Tips
@@ -451,12 +458,12 @@ podman compose up -V
 - **Dump not importing?** 
   - Ensure the file is named exactly `just_chat_rag.dump`
   - Remember: dump script creates `YYYYMMDD-HHMMSS.dump` but import needs `just_chat_rag.dump`
-- **Old data still present?** Make sure you used the `-V` flag to recreate volumes
+- **Old data still present?** Make sure you removed the `just-chat_meili-data` volume before restart
 - **Large dumps taking time?** MeiliSearch import happens during startup - wait for the container to fully initialize
 - **Import failed?** Check container logs: `docker compose logs -f meilisearch`
 - **Wrong dump file?** Use `ls -t ./dumps/*.dump | head -n1` to find the most recent dump
 
-**Note**: This process only resets MeiliSearch data (anonymous volume) while preserving MongoDB chat history (named volume).
+**Note**: This process only resets MeiliSearch data (by removing the `meili-data` volume) while preserving MongoDB chat history (the `mongo-data` volume remains intact).
 
 ## Some notes
 0. Be sure to use ```docker pull``` (or podman pull if you use Podman) from time to time since the containers do not always automatically update when image was called with `:latest`

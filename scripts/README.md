@@ -121,20 +121,20 @@ This directory contains utility scripts for setting up, configuring, and managin
   1. Run the script with `--update-import` flag (recommended)
   2. Dump created and automatically copied to `just_chat_rag.dump`
   3. Transfer `just_chat_rag.dump` to target environment if needed
-  4. Use `docker compose up -V` to import the dump
+  4. Remove MeiliSearch volume and restart: `docker compose down && docker volume rm just-chat_meili-data && docker compose up`
   
   **📁 Legacy Manual Workflow (if needed)**
   1. Run the script to create a timestamped dump
   2. Manually rename: `cp ./dumps/YYYYMMDD-HHMMSS.dump ./dumps/just_chat_rag.dump`
   3. Transfer to target environment if needed
-  4. Use `docker compose up -V` to import the dump
+  4. Remove MeiliSearch volume and restart: `docker compose down && docker volume rm just-chat_meili-data && docker compose up`
 
 - **Updating to Meilisearch 1.16+ for Export Features:**
   ```bash
   # Update your docker-compose.yml to use Meilisearch 1.16+
   # services:
   #   meilisearch:
-  #     image: getmeili/meilisearch:v1.16.0
+  #     image: getmeili/meilisearch:v1.20.0
   
   # Pull and restart with updated image
   docker compose pull

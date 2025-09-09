@@ -112,7 +112,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.16.0  # we have to use it because migration got easier
+    image: docker.io/getmeili/meilisearch:v1.20.0  # we have to use it because migration got easier
     environment:
       - http_proxy
       - https_proxy
