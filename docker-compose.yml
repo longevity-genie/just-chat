@@ -105,7 +105,7 @@ services:
         condition: service_healthy
 
   meilisearch:
-    image: docker.io/getmeili/meilisearch:v1.20.0
+    image: docker.io/getmeili/meilisearch:v1.26.0
     
     environment:
       - MEILI_MASTER_KEY=fancy_master_key

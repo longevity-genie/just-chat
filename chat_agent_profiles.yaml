@@ -7,7 +7,7 @@ agent_profiles:
     #enforce_agent_prompt: "true"
     llm_options:
     #  api_base: https://api.groq.com/openai/v1
-      model: groq/llama-3.3-70b-versatile
+      model: groq/openai/gpt-oss-20b
       temperature: 0.0
     raise_on_completion_status_errors: False #report API errors into chat
     enforce_agent_prompt: True
@@ -54,7 +54,7 @@ agent_profiles:
       - package: "agent_tools.toy_tools"
         function: "summarize_dataframe"
     llm_options:
-      model: groq/llama-3.3-70b-versatile
+      model: groq/openai/gpt-oss-20b
       temperature: 0.1 # Slightly increased randomness for better flexibility.
     examples:
       - prompt: Generate a random 3x4 matrix, please.
@@ -85,7 +85,7 @@ agent_profiles:
     remember_query : False
     llm_options:
       api_base: https://api.groq.com/openai/v1
-      model: groq/llama-3.3-70b-versatile
+      model: groq/openai/gpt-oss-20b
       temperature: 0.7 # Allows more creative name generation.
     examples:
       - prompt: How are you today?
@@ -108,7 +108,7 @@ agent_profiles:
       - package: "just_semantic_search.meili.tools"
         function: "all_indexes"
     llm_options:
-      model: groq/llama-3.3-70b-versatile
+      model: groq/openai/gpt-oss-20b
       temperature: 0.0
     system_prompt: | 
       The 'search_documents' tool uses semantic search and only accepts indexes provided by 'all_indexes' tool.
@@ -127,7 +127,7 @@ agent_profiles:
     hidden: true
     assistant_index: 71
     llm_options:
-      model: groq/llama-3.3-70b-versatile
+      model: groq/openai/gpt-oss-20b
       temperature: 0.0
     system_prompt: |
         You are a paper annotator. You extract the abstract, authors and titles of the papers.
